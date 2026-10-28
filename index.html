@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Parcel Tracking System | Observer Design Pattern</title>
+    <title>SmartParcel Express | Real-Time Tracking & Notification System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,695 +11,211 @@
 </head>
 <body>
 
-    <!-- Top Navigation Bar -->
-    <header class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
                     </svg>
                 </div>
-                <div class="brand-text">
-                    <span class="brand-title">Smart Parcel Tracker</span>
-                    <span class="brand-subtitle">Observer Design Pattern • Java College Project</span>
+                <div>
+                    <h1 class="brand-name">SmartParcel Express</h1>
+                    <p class="brand-tagline">Real-Time Dispatch &amp; Notification Portal</p>
                 </div>
             </div>
 
-            <nav class="nav-links">
-                <a href="#live-java" class="nav-link active">Java Output</a>
-                <a href="#tracking-timeline" class="nav-link">Tracking Timeline</a>
-                <a href="#stakeholders" class="nav-link">Observers</a>
-                <a href="#notifications" class="nav-link">Notifications</a>
-                <a href="#simulation" class="nav-link">Visual Stepper</a>
-                <a href="#academic-guide" class="nav-link">Pattern & Viva Notes</a>
-            </nav>
-
-            <div class="server-status-pill" id="serverStatusBadge">
-                <span class="status-dot"></span>
-                <span class="status-label" id="serverStatusText">Detecting Java Runner...</span>
+            <div class="header-actions">
+                <div class="live-status-pill">
+                    <span class="live-pulse"></span>
+                    <span>System Active • Live Dispatch</span>
+                </div>
+                <button class="btn btn-sm btn-ghost" id="btnResetDemo" title="Reset Parcel &amp; Observers to Initial State">
+                    ↺ Reset Demo
+                </button>
             </div>
         </div>
     </header>
 
-    <main class="main-content">
+    <!-- Main Dashboard Container -->
+    <main class="dashboard-container">
 
-        <!-- Hero / Project Summary Banner -->
-        <section class="hero-banner">
-            <div class="hero-content">
-                <div class="badge-tag">Academic Mini Project</div>
-                <h1 class="hero-title">Smart Parcel Tracking & Notification System</h1>
-                <p class="hero-desc">
-                    Demonstrating the <strong>Observer Design Pattern</strong> in pure Java. 
-                    The Subject (<code>Parcel</code>) maintains a dynamic list of subscribers and broadcasts real-time 
-                    status notifications to Concrete Observers (<code>Customer</code> & <code>DeliveryAgent</code>) with zero tight coupling.
-                </p>
-                <div class="hero-meta-grid">
-                    <div class="meta-item">
-                        <span class="meta-label">Active Parcel</span>
-                        <span class="meta-value">P101</span>
+        <!-- Top Row: Parcel Overview & Live Tracking Progress -->
+        <section class="card tracking-hero-card">
+            <div class="card-header-flex">
+                <div>
+                    <span class="badge-label">Active Consignment</span>
+                    <h2 class="parcel-id-title">Parcel <span id="displayParcelId">#P101</span></h2>
+                    <p class="parcel-route-text">
+                        <span class="route-from">📍 Mumbai Hub (Warehouse)</span>
+                        <span class="route-arrow">➔</span>
+                        <span class="route-to">🏠 Pune Central (Janvi Thakre)</span>
+                    </p>
+                </div>
+                <div class="current-status-box">
+                    <span class="status-sub-label">Current Status</span>
+                    <div class="status-badge" id="currentStatusBadge">Packed</div>
+                    <span class="last-updated-text" id="lastUpdatedText">Updated: Just now</span>
+                </div>
+            </div>
+
+            <!-- 4-Stage Horizontal Progress Timeline -->
+            <div class="timeline-container">
+                <div class="timeline-bar-bg">
+                    <div class="timeline-bar-fill" id="timelineBarFill" style="width: 10%;"></div>
+                </div>
+
+                <div class="timeline-steps">
+                    <!-- Step 1: Packed -->
+                    <div class="timeline-node active" id="node-Packed">
+                        <div class="node-circle">
+                            <span class="node-icon">📦</span>
+                        </div>
+                        <div class="node-info">
+                            <span class="node-title">Packed</span>
+                            <span class="node-sub">Warehouse Hub</span>
+                        </div>
                     </div>
-                    <div class="meta-item">
-                        <span class="meta-label">Design Pattern</span>
-                        <span class="meta-value">Observer (GoF Behavioral)</span>
+
+                    <!-- Step 2: Shipped -->
+                    <div class="timeline-node" id="node-Shipped">
+                        <div class="node-circle">
+                            <span class="node-icon">🚚</span>
+                        </div>
+                        <div class="node-info">
+                            <span class="node-title">Shipped</span>
+                            <span class="node-sub">In Transit</span>
+                        </div>
                     </div>
-                    <div class="meta-item">
-                        <span class="meta-label">Java Source Code</span>
-                        <span class="meta-value text-emerald">100% Unmodified</span>
+
+                    <!-- Step 3: Out for Delivery -->
+                    <div class="timeline-node" id="node-Out-for-Delivery">
+                        <div class="node-circle">
+                            <span class="node-icon">🛵</span>
+                        </div>
+                        <div class="node-info">
+                            <span class="node-title">Out for Delivery</span>
+                            <span class="node-sub">Delivery Van</span>
+                        </div>
                     </div>
-                    <div class="meta-item">
-                        <span class="meta-label">Backend Architecture</span>
-                        <span class="meta-value">Standalone JVM Launcher</span>
+
+                    <!-- Step 4: Delivered -->
+                    <div class="timeline-node" id="node-Delivered">
+                        <div class="node-circle">
+                            <span class="node-icon">✅</span>
+                        </div>
+                        <div class="node-info">
+                            <span class="node-title">Delivered</span>
+                            <span class="node-sub">Doorstep</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- SECTION 1: LIVE JAVA EXECUTION LAYER (CRUCIAL REQUIREMENT) -->
-        <section id="live-java" class="section-card">
-            <div class="section-header">
+        <!-- Middle Action Bar: Dispatch Status Controller -->
+        <section class="card dispatch-control-card">
+            <div class="dispatch-header">
                 <div>
-                    <div class="section-tag">Authentic Java Integration</div>
-                    <h2 class="section-title">Original Java Program Execution (Main.java)</h2>
-                    <p class="section-subtitle">
-                        Directly executes the user's unedited Java code on the JVM via the lightweight integration launcher.
-                        Displays the verbatim standard console output without modifying a single line of Java code.
+                    <h3 class="section-title">⚡ Courier Dispatch Controls</h3>
+                    <p class="section-desc">
+                        Click any status below to simulate the parcel's journey. 
+                        <strong>Subscribed customers and delivery agents will automatically receive instant alerts!</strong>
                     </p>
                 </div>
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="btnRunJava">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                        <span>Run Original Java Program</span>
+                <span class="observer-tag">Observer Pattern in Action</span>
+            </div>
+
+            <div class="status-buttons-row">
+                <button class="status-action-btn active" data-status="Packed">
+                    <span class="btn-icon">📦</span>
+                    <span class="btn-text">1. Packed</span>
+                </button>
+                <button class="status-action-btn" data-status="Shipped">
+                    <span class="btn-icon">🚚</span>
+                    <span class="btn-text">2. Shipped</span>
+                </button>
+                <button class="status-action-btn" data-status="Out for Delivery">
+                    <span class="btn-icon">🛵</span>
+                    <span class="btn-text">3. Out for Delivery</span>
+                </button>
+                <button class="status-action-btn" data-status="Delivered">
+                    <span class="btn-icon">✅</span>
+                    <span class="btn-text">4. Delivered</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Two Column Layout: Subscribers & Live Notification Feed -->
+        <div class="dashboard-grid">
+
+            <!-- Column 1: Subscribed Observers Management -->
+            <section class="card observers-management-card">
+                <div class="card-title-flex">
+                    <div>
+                        <h3 class="section-title">👥 Subscribed Observers</h3>
+                        <p class="section-desc">Entities registered to receive real-time parcel updates.</p>
+                    </div>
+                    <span class="sub-counter-badge" id="activeSubCount">3 Active</span>
+                </div>
+
+                <!-- Add New Subscriber Form -->
+                <form id="addObserverForm" class="add-observer-form">
+                    <input type="text" id="obsNameInput" placeholder="Enter Name (e.g. Sneha)" required>
+                    <select id="obsTypeInput">
+                        <option value="Customer">Customer</option>
+                        <option value="Delivery Agent">Delivery Agent</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-add">
+                        + Subscribe
                     </button>
-                    <button class="btn btn-secondary" id="btnCopyOutput">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                        <span>Copy Output</span>
-                    </button>
-                    <button class="btn btn-outline" id="btnToggleSource">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <polyline points="16 18 22 12 16 6"></polyline>
-                            <polyline points="8 6 2 12 8 18"></polyline>
-                        </svg>
-                        <span>View Main.java</span>
-                    </button>
-                </div>
-            </div>
+                </form>
 
-            <!-- Terminal Console Container -->
-            <div class="terminal-container">
-                <div class="terminal-topbar">
-                    <div class="terminal-dots">
-                        <span class="dot dot-red"></span>
-                        <span class="dot dot-yellow"></span>
-                        <span class="dot dot-green"></span>
+                <!-- Subscribers List -->
+                <div class="observers-list" id="observersListContainer">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+
+                <div class="unsub-tip">
+                    <span class="tip-icon">💡</span>
+                    <span><strong>Test Unsubscribe:</strong> Click "Unsubscribe" on Priya, then change status to "Out for Delivery". Rahul and Amit will receive alerts, but Priya will not!</span>
+                </div>
+            </section>
+
+            <!-- Column 2: Live Notification Stream -->
+            <section class="card notifications-stream-card">
+                <div class="card-title-flex">
+                    <div>
+                        <h3 class="section-title">🔔 Live Notification Feed</h3>
+                        <p class="section-desc">Instant alerts triggered automatically when parcel status changes.</p>
                     </div>
-                    <div class="terminal-title">
-                        <span class="icon-terminal">⌨</span> 
-                        <span id="terminalTitleText">Java Process Output — javac Main.java &amp;&amp; java Main</span>
-                    </div>
-                    <div class="terminal-metrics" id="terminalMetrics">
-                        <span class="metric-pill">Status: Ready</span>
+                    <div class="notif-filter-tabs">
+                        <button class="filter-pill active" data-filter="all">All</button>
+                        <button class="filter-pill" data-filter="Customer">Customers</button>
+                        <button class="filter-pill" data-filter="Delivery Agent">Agents</button>
                     </div>
                 </div>
 
-                <div class="terminal-body" id="terminalOutput">
-<span class="term-dim">// Press "Run Original Java Program" above to compile &amp; run Main.java directly</span>
-<span class="term-dim">// Output from the unedited Java Observer Pattern program will stream here:</span>
-
-<span class="term-cyan">--- Status updated to Shipped ---</span>
-<span class="term-green">Hello Rahul! Your parcel P101 is now: Shipped</span>
-<span class="term-green">Hello Priya! Your parcel P101 is now: Shipped</span>
-<span class="term-blue">Agent Amit: Parcel P101 status updated to: Shipped</span>
-
-<span class="term-yellow">--- Priya unsubscribes ---</span>
-
-<span class="term-cyan">--- Status updated to Out for Delivery ---</span>
-<span class="term-green">Hello Rahul! Your parcel P101 is now: Out for Delivery</span>
-<span class="term-blue">Agent Amit: Parcel P101 status updated to: Out for Delivery</span>
+                <!-- Notification Cards Feed -->
+                <div class="notifications-feed" id="notificationsFeed">
+                    <!-- Notifications populated dynamically -->
                 </div>
-            </div>
+            </section>
 
-            <!-- Source Code Drawer (Hidden by default, toggleable) -->
-            <div class="code-viewer-card" id="sourceCodeDrawer" style="display: none;">
-                <div class="code-viewer-header">
-                    <div class="file-info">
-                        <span class="file-icon">☕</span>
-                        <span class="file-name">Main.java</span>
-                        <span class="file-badge">100% UNMODIFIED ORIGINAL</span>
-                    </div>
-                    <div class="code-note">Exact Java code provided by student (Zero modifications, zero new methods, no Spring Boot)</div>
-                </div>
-                <pre class="code-block"><code id="javaSourceCodeContainer">/* Loading Main.java ... */</code></pre>
-            </div>
-        </section>
-
-        <!-- SECTION 2: 4-STAGE PARCEL TRACKING TIMELINE -->
-        <section id="tracking-timeline" class="section-card">
-            <div class="section-header">
-                <div>
-                    <div class="section-tag">Visual Dashboard</div>
-                    <h2 class="section-title">Four-Stage Parcel Tracking Timeline</h2>
-                    <p class="section-subtitle">
-                        Tracking the journey of Parcel <strong>#P101</strong> across all delivery milestones.
-                        Observer notifications are automatically triggered at each status transition.
-                    </p>
-                </div>
-                <div class="parcel-quick-badge">
-                    <span class="badge-label">Tracking ID</span>
-                    <span class="badge-code">P101</span>
-                    <span class="badge-state" id="timelineActiveStateText">Out for Delivery</span>
-                </div>
-            </div>
-
-            <!-- 4-Stage Horizontal Timeline -->
-            <div class="timeline-wrapper">
-                <div class="timeline-track">
-                    <div class="timeline-progress-fill" id="timelineProgressFill" style="width: 66.6%;"></div>
-                </div>
-
-                <div class="timeline-stages">
-                    <!-- Stage 1 -->
-                    <div class="timeline-step completed" id="step-packed" data-stage="Packed">
-                        <div class="step-indicator">
-                            <span class="step-check">✓</span>
-                            <span class="step-num">1</span>
-                        </div>
-                        <div class="step-content">
-                            <span class="step-title">Packed</span>
-                            <span class="step-location">Warehouse Fulfillment Center</span>
-                            <span class="step-desc">Parcel initialized with 3 subscribed observers</span>
-                            <span class="step-time">09:30 AM</span>
-                        </div>
-                    </div>
-
-                    <!-- Stage 2 -->
-                    <div class="timeline-step completed" id="step-shipped" data-stage="Shipped">
-                        <div class="step-indicator">
-                            <span class="step-check">✓</span>
-                            <span class="step-num">2</span>
-                        </div>
-                        <div class="step-content">
-                            <span class="step-title">Shipped</span>
-                            <span class="step-location">Regional Sorting Facility</span>
-                            <span class="step-desc"><code>setStatus("Shipped")</code>: Rahul, Priya &amp; Amit notified</span>
-                            <span class="step-time">01:15 PM</span>
-                        </div>
-                    </div>
-
-                    <!-- Stage 3 -->
-                    <div class="timeline-step active" id="step-out-for-delivery" data-stage="Out for Delivery">
-                        <div class="step-indicator">
-                            <span class="step-pulse"></span>
-                            <span class="step-num">3</span>
-                        </div>
-                        <div class="step-content">
-                            <span class="step-title">Out for Delivery</span>
-                            <span class="step-location">Local Delivery Van #14</span>
-                            <span class="step-desc">Priya unsubscribed. Only Rahul &amp; Amit notified!</span>
-                            <span class="step-time">04:45 PM (Current)</span>
-                        </div>
-                    </div>
-
-                    <!-- Stage 4 -->
-                    <div class="timeline-step upcoming" id="step-delivered" data-stage="Delivered">
-                        <div class="step-indicator">
-                            <span class="step-num">4</span>
-                        </div>
-                        <div class="step-content">
-                            <span class="step-title">Delivered</span>
-                            <span class="step-location">Recipient Doorstep</span>
-                            <span class="step-desc">Final milestone confirmation</span>
-                            <span class="step-time">Estimated 06:30 PM</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: STAKEHOLDER CARDS (SUBJECT & OBSERVERS) -->
-        <section id="stakeholders" class="section-card">
-            <div class="section-header">
-                <div>
-                    <div class="section-tag">Observer Pattern Entities</div>
-                    <h2 class="section-title">Stakeholder Network (Subject &amp; Observers)</h2>
-                    <p class="section-subtitle">
-                        Inspect the Subject (<code>Parcel</code>) and the Concrete Observers (<code>Customer</code>, <code>DeliveryAgent</code>)
-                        and their dynamic subscription statuses.
-                    </p>
-                </div>
-            </div>
-
-            <div class="stakeholders-grid">
-                <!-- Subject Card -->
-                <div class="stakeholder-card subject-card">
-                    <div class="card-badge subject-badge">CONCRETE SUBJECT</div>
-                    <div class="card-avatar subject-avatar">📦</div>
-                    <h3 class="stakeholder-name">Parcel (P101)</h3>
-                    <p class="stakeholder-role">State-Changing Observable Object</p>
-                    
-                    <div class="card-details">
-                        <div class="detail-row">
-                            <span class="detail-key">Identifier:</span>
-                            <span class="detail-val"><code>parcelId = "P101"</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Current Status:</span>
-                            <span class="detail-val status-val" id="subjectCurrentStatus">Out for Delivery</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Registered Observers:</span>
-                            <span class="detail-val text-blue font-bold" id="subjectObserverCount">2 of 3 Active</span>
-                        </div>
-                    </div>
-
-                    <div class="card-methods">
-                        <div class="method-chip">registerObserver(Observer o)</div>
-                        <div class="method-chip">removeObserver(Observer o)</div>
-                        <div class="method-chip">notifyObservers()</div>
-                        <div class="method-chip">setStatus(newStatus)</div>
-                    </div>
-                </div>
-
-                <!-- Observer 1: Rahul -->
-                <div class="stakeholder-card observer-card" id="cardRahul">
-                    <div class="card-badge observer-badge">CONCRETE OBSERVER 1</div>
-                    <div class="card-avatar customer-avatar">👤</div>
-                    <h3 class="stakeholder-name">Rahul</h3>
-                    <p class="stakeholder-role">Customer (Primary Recipient)</p>
-
-                    <div class="subscription-pill sub-active" id="subStatusRahul">
-                        <span class="sub-dot"></span> Subscribed
-                    </div>
-
-                    <div class="card-details">
-                        <div class="detail-row">
-                            <span class="detail-key">Class:</span>
-                            <span class="detail-val"><code>Customer implements Observer</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Notification Format:</span>
-                            <span class="detail-val"><code>"Hello Rahul! Your parcel..."</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Shipped Stage:</span>
-                            <span class="detail-val text-emerald">Received ✓</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Out for Delivery:</span>
-                            <span class="detail-val text-emerald">Received ✓</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Observer 2: Priya (Unsubscribed) -->
-                <div class="stakeholder-card observer-card unsubscribed" id="cardPriya">
-                    <div class="card-badge observer-badge">CONCRETE OBSERVER 2</div>
-                    <div class="card-avatar customer-avatar">👩</div>
-                    <h3 class="stakeholder-name">Priya</h3>
-                    <p class="stakeholder-role">Customer (Secondary Notification)</p>
-
-                    <div class="subscription-pill sub-inactive" id="subStatusPriya">
-                        <span class="sub-dot"></span> Unsubscribed
-                    </div>
-
-                    <div class="card-details">
-                        <div class="detail-row">
-                            <span class="detail-key">Class:</span>
-                            <span class="detail-val"><code>Customer implements Observer</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Dynamic Event:</span>
-                            <span class="detail-val text-amber font-bold"><code>removeObserver(priya)</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Shipped Stage:</span>
-                            <span class="detail-val text-emerald">Received ✓</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Out for Delivery:</span>
-                            <span class="detail-val text-rose">Skipped (Not Subscribed) ✕</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Observer 3: Amit (Delivery Agent) -->
-                <div class="stakeholder-card observer-card" id="cardAmit">
-                    <div class="card-badge agent-badge">CONCRETE OBSERVER 3</div>
-                    <div class="card-avatar agent-avatar">🚚</div>
-                    <h3 class="stakeholder-name">Amit</h3>
-                    <p class="stakeholder-role">Delivery Agent (Field Logistics)</p>
-
-                    <div class="subscription-pill sub-active" id="subStatusAmit">
-                        <span class="sub-dot"></span> Subscribed
-                    </div>
-
-                    <div class="card-details">
-                        <div class="detail-row">
-                            <span class="detail-key">Class:</span>
-                            <span class="detail-val"><code>DeliveryAgent implements Observer</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Notification Format:</span>
-                            <span class="detail-val"><code>"Agent Amit: Parcel P101..."</code></span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Shipped Stage:</span>
-                            <span class="detail-val text-emerald">Received ✓</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-key">Out for Delivery:</span>
-                            <span class="detail-val text-emerald">Received ✓</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 4: NOTIFICATION PANEL -->
-        <section id="notifications" class="section-card">
-            <div class="section-header">
-                <div>
-                    <div class="section-tag">Broadcast Log</div>
-                    <h2 class="section-title">Notification Feed (Java Console Log Mirror)</h2>
-                    <p class="section-subtitle">
-                        Every time <code>notifyObservers()</code> is invoked by <code>setStatus()</code>,
-                        the concrete observers format and output these distinct notification messages.
-                    </p>
-                </div>
-                <div class="feed-filter-tabs">
-                    <button class="filter-btn active" data-filter="all">All Alerts (5)</button>
-                    <button class="filter-btn" data-filter="customer">Customer Only (3)</button>
-                    <button class="filter-btn" data-filter="agent">Agent Only (2)</button>
-                </div>
-            </div>
-
-            <div class="notification-stream" id="notificationStream">
-                <!-- Notification 1 -->
-                <div class="notif-card notif-customer" data-type="customer">
-                    <div class="notif-icon">👤</div>
-                    <div class="notif-body">
-                        <div class="notif-meta">
-                            <span class="notif-recipient">Customer: Rahul</span>
-                            <span class="notif-stage">Status: Shipped</span>
-                            <span class="notif-time">Stage 2</span>
-                        </div>
-                        <div class="notif-text">
-                            "Hello Rahul! Your parcel P101 is now: Shipped"
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notification 2 -->
-                <div class="notif-card notif-customer" data-type="customer">
-                    <div class="notif-icon">👩</div>
-                    <div class="notif-body">
-                        <div class="notif-meta">
-                            <span class="notif-recipient">Customer: Priya</span>
-                            <span class="notif-stage">Status: Shipped</span>
-                            <span class="notif-time">Stage 2</span>
-                        </div>
-                        <div class="notif-text">
-                            "Hello Priya! Your parcel P101 is now: Shipped"
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notification 3 -->
-                <div class="notif-card notif-agent" data-type="agent">
-                    <div class="notif-icon">🚚</div>
-                    <div class="notif-body">
-                        <div class="notif-meta">
-                            <span class="notif-recipient">Delivery Agent: Amit</span>
-                            <span class="notif-stage">Status: Shipped</span>
-                            <span class="notif-time">Stage 2</span>
-                        </div>
-                        <div class="notif-text">
-                            "Agent Amit: Parcel P101 status updated to: Shipped"
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notification 4 -->
-                <div class="notif-card notif-customer" data-type="customer">
-                    <div class="notif-icon">👤</div>
-                    <div class="notif-body">
-                        <div class="notif-meta">
-                            <span class="notif-recipient">Customer: Rahul</span>
-                            <span class="notif-stage">Status: Out for Delivery</span>
-                            <span class="notif-time">Stage 3</span>
-                        </div>
-                        <div class="notif-text">
-                            "Hello Rahul! Your parcel P101 is now: Out for Delivery"
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notification 5 -->
-                <div class="notif-card notif-agent" data-type="agent">
-                    <div class="notif-icon">🚚</div>
-                    <div class="notif-body">
-                        <div class="notif-meta">
-                            <span class="notif-recipient">Delivery Agent: Amit</span>
-                            <span class="notif-stage">Status: Out for Delivery</span>
-                            <span class="notif-time">Stage 3</span>
-                        </div>
-                        <div class="notif-text">
-                            "Agent Amit: Parcel P101 status updated to: Out for Delivery"
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 5: INTERACTIVE VISUAL STEPPER (FRONTEND SIMULATION - STRICTLY DISTINGUISHED) -->
-        <section id="simulation" class="section-card">
-            <!-- Prominent Academic Disclaimer Banner -->
-            <div class="academic-disclaimer-banner">
-                <div class="disclaimer-icon">⚠️</div>
-                <div class="disclaimer-text">
-                    <strong>Notice — Visual Educational Stepper (Client-Side Simulation):</strong> 
-                    This interactive simulator visually replicates the runtime sequence of the Java program to help explore the Observer pattern step-by-step. 
-                    Per project requirements, the original Java source code remains completely unchanged and is executed independently in the section above.
-                </div>
-            </div>
-
-            <div class="section-header">
-                <div>
-                    <div class="section-tag">Interactive Step-by-Step Walkthrough</div>
-                    <h2 class="section-title">Visual Observer Pattern Execution Stepper</h2>
-                    <p class="section-subtitle">
-                        Step through the sequential execution lines of <code>Main.main()</code> to observe 
-                        registration, status updates, unsubscriptions, and targeted notifications.
-                    </p>
-                </div>
-                <div class="stepper-controls">
-                    <button class="step-btn" id="btnStepPrev" disabled>◀ Prev Step</button>
-                    <span class="step-counter" id="stepCounterLabel">Step 2 of 3</span>
-                    <button class="step-btn" id="btnStepNext">Next Step ▶</button>
-                    <button class="step-btn btn-auto" id="btnStepAuto">Auto Play ⏯</button>
-                    <button class="step-btn btn-reset" id="btnStepReset">↺ Reset</button>
-                </div>
-            </div>
-
-            <div class="simulation-stage-box">
-                <div class="sim-code-highlight" id="simCodeDisplay">
-                    <span class="sim-line-prefix">Executing Java Statement:</span>
-                    <code id="simJavaStatement">parcel.setStatus("Shipped");</code>
-                </div>
-
-                <div class="sim-visual-grid">
-                    <div class="sim-col">
-                        <div class="sim-box-title">Subject State (Parcel P101)</div>
-                        <div class="sim-status-display" id="simStatusDisplay">
-                            <span class="sim-pill" id="simCurrentStatusBadge">Shipped</span>
-                        </div>
-                        <p class="sim-desc" id="simExplanationText">
-                            The status changed from "Packed" to "Shipped". Since newStatus != oldStatus, 
-                            <code>notifyObservers()</code> loops through all registered observers.
-                        </p>
-                    </div>
-
-                    <div class="sim-col">
-                        <div class="sim-box-title">Active Observer Registry</div>
-                        <div class="sim-observers-list" id="simObserversList">
-                            <div class="sim-observer-item active" id="simObsRahul">
-                                <span class="sim-obs-icon">👤</span>
-                                <span>Rahul (Customer)</span>
-                                <span class="sim-obs-status">Notified ✓</span>
-                            </div>
-                            <div class="sim-observer-item active" id="simObsPriya">
-                                <span class="sim-obs-icon">👩</span>
-                                <span>Priya (Customer)</span>
-                                <span class="sim-obs-status">Notified ✓</span>
-                            </div>
-                            <div class="sim-observer-item active" id="simObsAmit">
-                                <span class="sim-obs-icon">🚚</span>
-                                <span>Amit (DeliveryAgent)</span>
-                                <span class="sim-obs-status">Notified ✓</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 6: DESIGN PATTERN ARCHITECTURE & ACADEMIC VIVA NOTES -->
-        <section id="academic-guide" class="section-card">
-            <div class="section-header">
-                <div>
-                    <div class="section-tag">Viva &amp; Exam Preparation</div>
-                    <h2 class="section-title">Design Pattern Architecture &amp; System Limitations</h2>
-                    <p class="section-subtitle">
-                        Comprehensive documentation explaining the Observer pattern structure, decoupling benefits, 
-                        and the deliberate architectural reasons for keeping the Java code unedited.
-                    </p>
-                </div>
-            </div>
-
-            <div class="viva-grid">
-                <!-- Card 1: Pattern Theory -->
-                <div class="viva-card">
-                    <div class="viva-icon">📐</div>
-                    <h3 class="viva-title">Observer Pattern Principles</h3>
-                    <p class="viva-text">
-                        The <strong>Observer Design Pattern</strong> defines a one-to-many dependency between objects 
-                        so that when one object (the <em>Subject</em>) changes state, all its dependents (the <em>Observers</em>) 
-                        are notified and updated automatically.
-                    </p>
-                    <ul class="viva-list">
-                        <li><strong>Loose Coupling:</strong> The <code>Parcel</code> only interacts with the generic <code>Observer</code> interface, not concrete classes.</li>
-                        <li><strong>Open/Closed Principle:</strong> New observers (e.g. <code>WarehouseManager</code> or <code>SmsService</code>) can be added without modifying <code>Parcel</code>.</li>
-                        <li><strong>Dynamic Subscription:</strong> Observers can be registered or removed at runtime via <code>registerObserver()</code> and <code>removeObserver()</code>.</li>
-                    </ul>
-                </div>
-
-                <!-- Card 2: Mapping to Code -->
-                <div class="viva-card">
-                    <div class="viva-icon">🔍</div>
-                    <h3 class="viva-title">Java Code Mapping</h3>
-                    <div class="mapping-table-wrap">
-                        <table class="mapping-table">
-                            <thead>
-                                <tr>
-                                    <th>Pattern Role</th>
-                                    <th>Java Component</th>
-                                    <th>Method / Responsibility</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>Observer Interface</strong></td>
-                                    <td><code>interface Observer</code></td>
-                                    <td><code>void update(parcelId, status)</code></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Concrete Subject</strong></td>
-                                    <td><code>class Parcel</code></td>
-                                    <td><code>registerObserver()</code>, <code>removeObserver()</code>, <code>notifyObservers()</code>, <code>setStatus()</code></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Concrete Observer 1</strong></td>
-                                    <td><code>class Customer</code></td>
-                                    <td>Greets customer by name &amp; reveals parcel status</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Concrete Observer 2</strong></td>
-                                    <td><code>class DeliveryAgent</code></td>
-                                    <td>Dispatches action-oriented parcel updates to field agents</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Card 3: Limitations Explanation (Explicit User Requirement) -->
-                <div class="viva-card full-width">
-                    <div class="viva-icon">💡</div>
-                    <h3 class="viva-title">College Viva Defense: Why Is the Java Code Unchanged &amp; What Are the Limitations?</h3>
-                    <div class="limitations-content">
-                        <div class="limitation-block">
-                            <h4>1. Why the Java code was kept 100% untouched:</h4>
-                            <p>
-                                Academic evaluation strictly tests your understanding of pure Object-Oriented Design Patterns 
-                                in fundamental Java without masking it behind enterprise web frameworks like Spring Boot or external database drivers. 
-                                Keeping <code>Main.java</code> strictly unchanged ensures that the academic core logic is 100% verified and verifiable.
-                            </p>
-                        </div>
-                        <div class="limitation-block">
-                            <h4>2. Why web UI buttons cannot alter the running Java instance without modifying Java code:</h4>
-                            <p>
-                                In Java, a standard <code>public static void main(String[] args)</code> program runs sequentially on the JVM 
-                                from the first statement to the last statement and then immediately terminates (exit code 0). 
-                                For a web browser to dynamically inject new customers or change statuses into the live JVM at runtime, 
-                                the Java code would <strong>have to be modified</strong> to add a persistent socket server, an HTTP REST controller, 
-                                or an IPC listener.
-                            </p>
-                            <p>
-                                Because the strict project guidelines state: <em>"Do not add any new Java methods, getters, setters, controllers, or services"</em>, 
-                                any such modification would directly violate the strict rule. 
-                                Therefore, the architectural solution is:
-                            </p>
-                            <ul class="viva-list">
-                                <li><strong>Real Java Integration Layer:</strong> An external Node.js runner executes the unaltered <code>Main.java</code>, captures its authentic stdout, and displays it in the terminal.</li>
-                                <li><strong>Client-Side Stepper:</strong> An interactive frontend simulator illustrates the dynamic runtime steps visually for viva presentation without modifying the immutable Java source code.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Instructions Section -->
-        <section class="section-card instructions-card">
-            <div class="section-header">
-                <div>
-                    <div class="section-tag">Quick Start Guide</div>
-                    <h2 class="section-title">How to Run this Project</h2>
-                </div>
-            </div>
-
-            <div class="instructions-grid">
-                <div class="inst-col">
-                    <h4 class="inst-title">Method 1: 1-Click Launch (Web + Real Java Runner)</h4>
-                    <p class="inst-text">Open terminal in the project folder and start the integration launcher:</p>
-                    <pre class="inst-code"><code>node server.js</code></pre>
-                    <p class="inst-text">Then open your browser at: <a href="http://localhost:3000" target="_blank" class="inst-link">http://localhost:3000</a></p>
-                    <p class="inst-hint">Or simply double-click <code>run.bat</code> on Windows!</p>
-                </div>
-
-                <div class="inst-col">
-                    <h4 class="inst-title">Method 2: Pure Java Terminal Execution</h4>
-                    <p class="inst-text">To compile and run the Java program directly in any terminal (Command Prompt / PowerShell / VS Code / IntelliJ):</p>
-                    <pre class="inst-code"><code>javac Main.java
-java Main</code></pre>
-                    <p class="inst-hint">Requires standard JDK installed.</p>
-                </div>
-            </div>
-        </section>
+        </div>
 
     </main>
 
-    <!-- Footer -->
+    <!-- Toast Alert Popup Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
     <footer class="app-footer">
-        <div class="footer-container">
-            <div class="footer-left">
-                <span class="footer-title">Smart Parcel Tracking and Notification System</span>
-                <span class="footer-sub">Observer Design Pattern • College Mini Project</span>
-            </div>
-            <div class="footer-right">
-                <span class="integrity-badge">✓ 100% Java Source Code Preserved</span>
-            </div>
-        </div>
+        <p>SmartParcel Express • Smart Parcel Tracking and Notification System</p>
     </footer>
 
-    <!-- JavaScript Application Logic -->
     <script src="app.js"></script>
 </body>
 </html>

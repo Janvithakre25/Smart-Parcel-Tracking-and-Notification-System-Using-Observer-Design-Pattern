@@ -1,475 +1,411 @@
 /**
- * Smart Parcel Tracking and Notification System
- * Frontend Application Controller
+ * SmartParcel Express - Client Application Controller
+ * Realistic Real-time Parcel Tracking & Observer Pattern System
  */
 
-// Fallback verified output from javac Main.java && java Main
-const VERIFIED_JAVA_OUTPUT = `--- Status updated to Shipped ---
-Hello Rahul! Your parcel P101 is now: Shipped
-Hello Priya! Your parcel P101 is now: Shipped
-Agent Amit: Parcel P101 status updated to: Shipped
+// Local fallback state (used when opened directly via file:// without server.js)
+let localState = {
+    parcelId: "P101",
+    sender: "Amazon Central Fulfillment - Mumbai Hub",
+    destination: "Janvi Thakre, Pune Central, Maharashtra",
+    status: "Packed",
+    lastUpdated: "Just now",
+    observers: [
+        { id: "obs_1", name: "Rahul", type: "Customer", active: true, registeredAt: "09:00 AM" },
+        { id: "obs_2", name: "Priya", type: "Customer", active: true, registeredAt: "09:15 AM" },
+        { id: "obs_3", name: "Amit", type: "Delivery Agent", active: true, registeredAt: "09:30 AM" }
+    ],
+    notifications: []
+};
 
---- Priya unsubscribes ---
-
---- Status updated to Out for Delivery ---
-Hello Rahul! Your parcel P101 is now: Out for Delivery
-Agent Amit: Parcel P101 status updated to: Out for Delivery`;
-
-const VERIFIED_JAVA_SOURCE = `import java.util.ArrayList;
-import java.util.List;
-
-// Observer Interface
-interface Observer {
-    void update(String parcelId, String status);
-}
-
-// Concrete Observer 1
-class Customer implements Observer {
-    private String name;
-
-    public Customer(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void update(String parcelId, String status) {
-        System.out.println("Hello " + name + "! Your parcel " + parcelId + " is now: " + status);
-    }
-}
-
-// Concrete Observer 2
-class DeliveryAgent implements Observer {
-    private String name;
-
-    public DeliveryAgent(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void update(String parcelId, String status) {
-        System.out.println("Agent " + name + ": Parcel " + parcelId + " status updated to: " + status);
-    }
-}
-
-// Concrete Subject
-class Parcel {
-    private String parcelId;
-    private String status;
-    private List<Observer> observers = new ArrayList<>();
-
-    public Parcel(String parcelId, String status) {
-        this.parcelId = parcelId;
-        this.status = status;
-    }
-
-    public void registerObserver(Observer o) {
-        observers.add(o);
-    }
-
-    public void removeObserver(Observer o) {
-        observers.remove(o);
-    }
-
-    public void notifyObservers() {
-        for (Observer o : observers) {
-            o.update(parcelId, status);
-        }
-    }
-
-    public void setStatus(String newStatus) {
-        if (!this.status.equals(newStatus)) {
-            this.status = newStatus;
-            notifyObservers();
-        }
-    }
-}
-
-// Main Class
-public class Main {
-    public static void main(String[] args) {
-
-        Parcel parcel = new Parcel("P101", "Packed");
-
-        Customer rahul = new Customer("Rahul");
-        Customer priya = new Customer("Priya");
-        DeliveryAgent amit = new DeliveryAgent("Amit");
-
-        parcel.registerObserver(rahul);
-        parcel.registerObserver(priya);
-        parcel.registerObserver(amit);
-
-        System.out.println("--- Status updated to Shipped ---");
-        parcel.setStatus("Shipped");
-
-        System.out.println("\\n--- Priya unsubscribes ---");
-        parcel.removeObserver(priya);
-
-        System.out.println("\\n--- Status updated to Out for Delivery ---");
-        parcel.setStatus("Out for Delivery");
-    }
-}`;
-
-// Simulation Steps Definition
-const SIMULATION_STEPS = [
-    {
-        stepNum: 1,
-        title: "Initialization & Observer Registration",
-        code: `Parcel parcel = new Parcel("P101", "Packed");\nparcel.registerObserver(rahul);\nparcel.registerObserver(priya);\nparcel.registerObserver(amit);`,
-        status: "Packed",
-        observers: {
-            rahul: { active: true, notified: false, text: "Registered (Awaiting Update)" },
-            priya: { active: true, notified: false, text: "Registered (Awaiting Update)" },
-            amit: { active: true, notified: false, text: "Registered (Awaiting Update)" }
-        },
-        explanation: "Subject (Parcel 'P101') is instantiated with status 'Packed'. Three observers (Rahul, Priya, and Amit) register themselves using registerObserver().",
-        timelineIndex: 0 // Packed
-    },
-    {
-        stepNum: 2,
-        title: "Status Update: Shipped (All Notified)",
-        code: `parcel.setStatus("Shipped");`,
-        status: "Shipped",
-        observers: {
-            rahul: { active: true, notified: true, text: "Notified: 'Hello Rahul! Your parcel P101 is now: Shipped'" },
-            priya: { active: true, notified: true, text: "Notified: 'Hello Priya! Your parcel P101 is now: Shipped'" },
-            amit: { active: true, notified: true, text: "Notified: 'Agent Amit: Parcel P101 status updated to: Shipped'" }
-        },
-        explanation: "parcel.setStatus('Shipped') detects a status change. notifyObservers() iterates through the observers list and invokes update() on Rahul, Priya, and Amit.",
-        timelineIndex: 1 // Shipped
-    },
-    {
-        stepNum: 3,
-        title: "Dynamic Unsubscribe: Priya Unsubscribes",
-        code: `parcel.removeObserver(priya);`,
-        status: "Shipped",
-        observers: {
-            rahul: { active: true, notified: false, text: "Still Subscribed" },
-            priya: { active: false, notified: false, text: "Unsubscribed (Removed from Subject's List)" },
-            amit: { active: true, notified: false, text: "Still Subscribed" }
-        },
-        explanation: "parcel.removeObserver(priya) dynamically removes Priya from the internal List<Observer>. The Subject now only holds references to Rahul and Amit.",
-        timelineIndex: 1 // Shipped
-    },
-    {
-        stepNum: 4,
-        title: "Status Update: Out for Delivery (Priya Skipped)",
-        code: `parcel.setStatus("Out for Delivery");`,
-        status: "Out for Delivery",
-        observers: {
-            rahul: { active: true, notified: true, text: "Notified: 'Hello Rahul! Your parcel P101 is now: Out for Delivery'" },
-            priya: { active: false, notified: false, text: "NOT NOTIFIED (Unsubscribed in Step 3)" },
-            amit: { active: true, notified: true, text: "Notified: 'Agent Amit: Parcel P101 status updated to: Out for Delivery'" }
-        },
-        explanation: "parcel.setStatus('Out for Delivery') triggers notifyObservers(). Since Priya was removed in the previous step, ONLY Rahul and Amit receive the update!",
-        timelineIndex: 2 // Out for Delivery
-    }
-];
-
-// App State
-let currentSimIndex = 1; // Default to step 2 (Shipped)
-let autoPlayTimer = null;
-let isServerOnline = false;
-let serverBaseUrl = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:3000';
+let isConnectedToServer = false;
+const API_BASE = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:3000';
 
 // DOM Elements
-const serverStatusBadge = document.getElementById('serverStatusBadge');
-const serverStatusText = document.getElementById('serverStatusText');
-const btnRunJava = document.getElementById('btnRunJava');
-const btnCopyOutput = document.getElementById('btnCopyOutput');
-const btnToggleSource = document.getElementById('btnToggleSource');
-const terminalOutput = document.getElementById('terminalOutput');
-const terminalMetrics = document.getElementById('terminalMetrics');
-const sourceCodeDrawer = document.getElementById('sourceCodeDrawer');
-const javaSourceCodeContainer = document.getElementById('javaSourceCodeContainer');
+const currentStatusBadge = document.getElementById('currentStatusBadge');
+const lastUpdatedText = document.getElementById('lastUpdatedText');
+const displayParcelId = document.getElementById('displayParcelId');
+const timelineBarFill = document.getElementById('timelineBarFill');
+const statusButtons = document.querySelectorAll('.status-action-btn');
+const observersListContainer = document.getElementById('observersListContainer');
+const activeSubCount = document.getElementById('activeSubCount');
+const notificationsFeed = document.getElementById('notificationsFeed');
+const addObserverForm = document.getElementById('addObserverForm');
+const obsNameInput = document.getElementById('obsNameInput');
+const obsTypeInput = document.getElementById('obsTypeInput');
+const filterPills = document.querySelectorAll('.filter-pill');
+const btnResetDemo = document.getElementById('btnResetDemo');
+const toastContainer = document.getElementById('toastContainer');
 
-// Stepper Elements
-const btnStepPrev = document.getElementById('btnStepPrev');
-const btnStepNext = document.getElementById('btnStepNext');
-const btnStepAuto = document.getElementById('btnStepAuto');
-const btnStepReset = document.getElementById('btnStepReset');
-const stepCounterLabel = document.getElementById('stepCounterLabel');
-const simJavaStatement = document.getElementById('simJavaStatement');
-const simCurrentStatusBadge = document.getElementById('simCurrentStatusBadge');
-const simExplanationText = document.getElementById('simExplanationText');
-const simObsRahul = document.getElementById('simObsRahul');
-const simObsPriya = document.getElementById('simObsPriya');
-const simObsAmit = document.getElementById('simObsAmit');
+const STAGE_CONFIG = {
+    "Packed": { index: 0, progress: 10, node: "node-Packed" },
+    "Shipped": { index: 1, progress: 40, node: "node-Shipped" },
+    "Out for Delivery": { index: 2, progress: 75, node: "node-Out-for-Delivery" },
+    "Delivered": { index: 3, progress: 100, node: "node-Delivered" }
+};
 
-// Timeline Elements
-const timelineProgressFill = document.getElementById('timelineProgressFill');
-const timelineSteps = [
-    document.getElementById('step-packed'),
-    document.getElementById('step-shipped'),
-    document.getElementById('step-out-for-delivery'),
-    document.getElementById('step-delivered')
-];
-const timelineActiveStateText = document.getElementById('timelineActiveStateText');
+let currentFilter = 'all';
 
-// Notification Filter Elements
-const filterButtons = document.querySelectorAll('.filter-btn');
-const notifCards = document.querySelectorAll('.notif-card');
-
-// Format Console Text with Syntax Colors
-function formatConsoleOutput(rawText) {
-    const lines = rawText.split('\n');
-    return lines.map(line => {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('--- Status updated')) {
-            return `<span class="term-cyan">${escapeHtml(line)}</span>`;
-        } else if (trimmed.startsWith('--- Priya unsubscribes')) {
-            return `<span class="term-yellow">${escapeHtml(line)}</span>`;
-        } else if (trimmed.startsWith('Hello')) {
-            return `<span class="term-green">${escapeHtml(line)}</span>`;
-        } else if (trimmed.startsWith('Agent')) {
-            return `<span class="term-blue">${escapeHtml(line)}</span>`;
-        } else if (trimmed === '') {
-            return '';
+// Initialize and Fetch Parcel State
+async function initApp() {
+    try {
+        const response = await fetch(`${API_BASE}/api/parcel`);
+        if (response.ok) {
+            const data = await response.json();
+            localState = data;
+            isConnectedToServer = true;
+            renderAll();
+            return;
         }
-        return escapeHtml(line);
-    }).join('\n');
+    } catch (e) {
+        console.log("Running in offline client mode");
+    }
+
+    // Fallback: initialize packed alert in client mode
+    if (localState.notifications.length === 0) {
+        clientNotify("Packed");
+    }
+    renderAll();
 }
 
+// Render complete dashboard
+function renderAll() {
+    renderStatus(localState.status);
+    renderObservers(localState.observers);
+    renderNotifications(localState.notifications);
+}
+
+// Render Status and 4-Stage Timeline
+function renderStatus(status) {
+    currentStatusBadge.innerText = status;
+    lastUpdatedText.innerText = `Updated: ${localState.lastUpdated || 'Just now'}`;
+
+    const config = STAGE_CONFIG[status] || STAGE_CONFIG["Packed"];
+
+    // Update Progress Bar
+    timelineBarFill.style.width = `${config.progress}%`;
+
+    // Update Timeline Step Nodes
+    const stages = ["Packed", "Shipped", "Out for Delivery", "Delivered"];
+    stages.forEach((stage, idx) => {
+        const nodeEl = document.getElementById(STAGE_CONFIG[stage].node);
+        if (!nodeEl) return;
+
+        nodeEl.classList.remove('completed', 'active');
+        if (idx < config.index) {
+            nodeEl.classList.add('completed');
+        } else if (idx === config.index) {
+            nodeEl.classList.add('active');
+        }
+    });
+
+    // Update Dispatch Control Buttons
+    statusButtons.forEach(btn => {
+        if (btn.dataset.status === status) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
+// Render Subscribed Observers
+function renderObservers(observers) {
+    observersListContainer.innerHTML = '';
+    const activeCount = observers.filter(o => o.active).length;
+    activeSubCount.innerText = `${activeCount} Active`;
+
+    observers.forEach(obs => {
+        const item = document.createElement('div');
+        item.className = `observer-item ${obs.active ? '' : 'inactive'}`;
+
+        const isCustomer = obs.type === 'Customer';
+        const avatar = isCustomer ? '👤' : '🚚';
+        const roleClass = isCustomer ? 'Customer' : 'Agent';
+
+        item.innerHTML = `
+            <div class="obs-left">
+                <div class="obs-avatar ${isCustomer ? '' : 'agent'}">${avatar}</div>
+                <div>
+                    <div class="obs-name">${escapeHtml(obs.name)}</div>
+                    <span class="obs-role-pill ${roleClass}">${obs.type}</span>
+                </div>
+            </div>
+            <div>
+                <button class="btn-toggle-sub ${obs.active ? 'active' : 'inactive'}" data-id="${obs.id}" data-active="${obs.active}">
+                    ${obs.active ? '✕ Unsubscribe' : '✓ Re-subscribe'}
+                </button>
+            </div>
+        `;
+
+        // Event listener for toggle button
+        const toggleBtn = item.querySelector('.btn-toggle-sub');
+        toggleBtn.addEventListener('click', () => toggleSubscription(obs.id, obs.active, obs.name));
+
+        observersListContainer.appendChild(item);
+    });
+}
+
+// Render Notifications Feed
+function renderNotifications(notifications) {
+    notificationsFeed.innerHTML = '';
+
+    const filtered = notifications.filter(n => {
+        if (currentFilter === 'all') return true;
+        return n.recipientType === currentFilter;
+    });
+
+    if (filtered.length === 0) {
+        notificationsFeed.innerHTML = `
+            <div class="empty-notifs">
+                No notifications to display for the selected filter.
+            </div>
+        `;
+        return;
+    }
+
+    filtered.forEach(notif => {
+        const card = document.createElement('div');
+        const isCustomer = notif.recipientType === 'Customer';
+        card.className = `notif-card ${isCustomer ? '' : 'agent-card'}`;
+
+        const icon = isCustomer ? '👤' : '🚚';
+
+        card.innerHTML = `
+            <div class="notif-icon">${icon}</div>
+            <div class="notif-body">
+                <div class="notif-header">
+                    <span class="notif-recipient">${escapeHtml(notif.recipientName)} (${notif.recipientType})</span>
+                    <span class="notif-time">${notif.timestamp}</span>
+                </div>
+                <div class="notif-text">
+                    "${escapeHtml(notif.message)}"
+                </div>
+            </div>
+        `;
+
+        notificationsFeed.appendChild(card);
+    });
+}
+
+// Change Status (Triggers Observer Notifications)
+async function changeParcelStatus(newStatus) {
+    if (localState.status === newStatus) {
+        showToast(`Parcel is already marked as "${newStatus}"`);
+        return;
+    }
+
+    if (isConnectedToServer) {
+        try {
+            const res = await fetch(`${API_BASE}/api/update-status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                localState = data.parcel;
+                renderAll();
+                const activeCount = data.newNotifications ? data.newNotifications.length : 0;
+                showToast(`Status updated to "${newStatus}"! ${activeCount} observers automatically notified.`);
+                return;
+            }
+        } catch (e) {
+            console.error("Server error, using client mode", e);
+        }
+    }
+
+    // Client fallback
+    localState.status = newStatus;
+    localState.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const count = clientNotify(newStatus);
+    renderAll();
+    showToast(`Status updated to "${newStatus}"! ${count} observers automatically notified.`);
+}
+
+// Client Fallback Observer Notification Generator
+function clientNotify(newStatus) {
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const activeObservers = localState.observers.filter(o => o.active);
+
+    activeObservers.forEach(obs => {
+        let msg = obs.type === 'Customer'
+            ? `Hello ${obs.name}! Your parcel ${localState.parcelId} is now: ${newStatus}`
+            : `Agent ${obs.name}: Parcel ${localState.parcelId} status updated to: ${newStatus}`;
+
+        localState.notifications.unshift({
+            id: 'notif_' + Date.now() + Math.random(),
+            recipientName: obs.name,
+            recipientType: obs.type,
+            status: newStatus,
+            message: msg,
+            timestamp: timestamp
+        });
+    });
+
+    return activeObservers.length;
+}
+
+// Toggle Subscription (Unsubscribe or Re-subscribe)
+async function toggleSubscription(obsId, currentlyActive, obsName) {
+    const endpoint = currentlyActive ? '/api/unsubscribe' : '/api/resubscribe';
+
+    if (isConnectedToServer) {
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: obsId })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                localState = data.parcel;
+                renderAll();
+                showToast(currentlyActive 
+                    ? `✕ ${obsName} unsubscribed. They will no longer receive alerts.` 
+                    : `✓ ${obsName} re-subscribed to notifications!`
+                );
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Client fallback
+    const target = localState.observers.find(o => o.id === obsId);
+    if (target) {
+        target.active = !currentlyActive;
+        renderAll();
+        showToast(currentlyActive 
+            ? `✕ ${obsName} unsubscribed. They will no longer receive alerts.` 
+            : `✓ ${obsName} re-subscribed to notifications!`
+        );
+    }
+}
+
+// Add New Observer
+async function handleAddObserver(e) {
+    e.preventDefault();
+    const name = obsNameInput.value.trim();
+    const type = obsTypeInput.value;
+
+    if (!name) return;
+
+    if (isConnectedToServer) {
+        try {
+            const res = await fetch(`${API_BASE}/api/subscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, type })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                localState = data.parcel;
+                obsNameInput.value = '';
+                renderAll();
+                showToast(`✓ Subscribed new ${type}: ${name}`);
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Client fallback
+    localState.observers.push({
+        id: 'obs_' + Date.now(),
+        name: name,
+        type: type,
+        active: true,
+        registeredAt: 'Just now'
+    });
+    obsNameInput.value = '';
+    renderAll();
+    showToast(`✓ Subscribed new ${type}: ${name}`);
+}
+
+// Reset Demo State
+async function handleResetDemo() {
+    if (isConnectedToServer) {
+        try {
+            const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                localState = data.parcel;
+                renderAll();
+                showToast("System reset back to initial state (Packed).");
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Client fallback reset
+    localState = {
+        parcelId: "P101",
+        sender: "Amazon Central Fulfillment - Mumbai Hub",
+        destination: "Janvi Thakre, Pune Central, Maharashtra",
+        status: "Packed",
+        lastUpdated: "Just now",
+        observers: [
+            { id: "obs_1", name: "Rahul", type: "Customer", active: true, registeredAt: "09:00 AM" },
+            { id: "obs_2", name: "Priya", type: "Customer", active: true, registeredAt: "09:15 AM" },
+            { id: "obs_3", name: "Amit", type: "Delivery Agent", active: true, registeredAt: "09:30 AM" }
+        ],
+        notifications: []
+    };
+    clientNotify("Packed");
+    renderAll();
+    showToast("System reset back to initial state (Packed).");
+}
+
+// Show Toast Alert Notification
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span>🔔</span> <span>${escapeHtml(message)}</span>`;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(15px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3200);
+}
+
+// Escape HTML helper
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.innerText = text;
     return div.innerHTML;
 }
 
-// Check Server Connectivity
-async function checkServerStatus() {
-    try {
-        const response = await fetch(`${serverBaseUrl}/api/status`, { method: 'GET' });
-        if (response.ok) {
-            const data = await response.json();
-            isServerOnline = true;
-            serverStatusBadge.className = 'server-status-pill online';
-            serverStatusText.innerHTML = `Java Integration Server Active (Port 3000)`;
-            return true;
-        }
-    } catch (e) {
-        // Server not reachable
-    }
-
-    isServerOnline = false;
-    serverStatusBadge.className = 'server-status-pill offline';
-    serverStatusText.innerHTML = `Java Runner Offline (Static Viewer)`;
-    return false;
-}
-
-// Execute Original Java Code
-async function runJavaProgram() {
-    terminalOutput.innerHTML = `<span class="term-dim">⏳ Compiling Main.java with javac and executing JVM process...</span>`;
-    terminalMetrics.innerHTML = `<span class="metric-pill">Running...</span>`;
-    btnRunJava.disabled = true;
-
-    try {
-        const response = await fetch(`${serverBaseUrl}/api/run-java`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            const formatted = formatConsoleOutput(result.stdout);
-            terminalOutput.innerHTML = formatted;
-            terminalMetrics.innerHTML = `
-                <span class="metric-pill" style="color: #4ade80;">✓ Exit: 0</span>
-                <span class="metric-pill">Time: ${result.executionTimeMs}ms</span>
-                <span class="metric-pill">Real JVM</span>
-            `;
-            return;
-        }
-    } catch (err) {
-        // Fallback for when server.js isn't started yet
-    }
-
-    // Render verified authentic output with clear note
-    setTimeout(() => {
-        const formatted = formatConsoleOutput(VERIFIED_JAVA_OUTPUT);
-        terminalOutput.innerHTML = `
-<span class="term-dim">// [Notice] Executing in Standalone Offline Mode</span>
-<span class="term-dim">// To run live JVM compilation on demand, start the runner with: node server.js</span>
-<span class="term-dim">// Below is the exact verified console output from OpenJDK 25 executing Main.java:</span>
-
-${formatted}`;
-
-        terminalMetrics.innerHTML = `
-            <span class="metric-pill" style="color: #4ade80;">Verified Output</span>
-            <span class="metric-pill">100% Matching Java Execution</span>
-        `;
-        btnRunJava.disabled = false;
-    }, 300);
-
-    btnRunJava.disabled = false;
-}
-
-// Load Java Source Code
-async function loadJavaSource() {
-    try {
-        const response = await fetch(`${serverBaseUrl}/api/java-source`);
-        if (response.ok) {
-            const data = await response.json();
-            javaSourceCodeContainer.innerText = data.source;
-            return;
-        }
-    } catch (e) {
-        // fallback
-    }
-    javaSourceCodeContainer.innerText = VERIFIED_JAVA_SOURCE;
-}
-
-// Copy Console Output
-function copyConsoleOutput() {
-    const text = terminalOutput.innerText;
-    navigator.clipboard.writeText(text).then(() => {
-        const originalText = btnCopyOutput.innerHTML;
-        btnCopyOutput.innerHTML = `<span>✓ Copied!</span>`;
-        setTimeout(() => {
-            btnCopyOutput.innerHTML = originalText;
-        }, 2000);
-    });
-}
-
-// Toggle Source Code Drawer
-function toggleSourceDrawer() {
-    if (sourceCodeDrawer.style.display === 'none' || !sourceCodeDrawer.style.display) {
-        sourceCodeDrawer.style.display = 'block';
-        loadJavaSource();
-        btnToggleSource.innerHTML = `<span>Hide Main.java</span>`;
-    } else {
-        sourceCodeDrawer.style.display = 'none';
-        btnToggleSource.innerHTML = `<span>View Main.java</span>`;
-    }
-}
-
-// Update Interactive Simulation Display
-function renderSimulationStep(index) {
-    const step = SIMULATION_STEPS[index];
-    stepCounterLabel.innerText = `Step ${index + 1} of ${SIMULATION_STEPS.length}`;
-    simJavaStatement.innerText = step.code;
-    simCurrentStatusBadge.innerText = step.status;
-    simExplanationText.innerHTML = step.explanation;
-
-    // Observers status
-    updateObserverSimItem(simObsRahul, step.observers.rahul, "Rahul (Customer)");
-    updateObserverSimItem(simObsPriya, step.observers.priya, "Priya (Customer)");
-    updateObserverSimItem(simObsAmit, step.observers.amit, "Amit (DeliveryAgent)");
-
-    // Button states
-    btnStepPrev.disabled = index === 0;
-    btnStepNext.disabled = index === SIMULATION_STEPS.length - 1;
-
-    // Sync visual timeline
-    updateTimelineProgress(step.timelineIndex, step.status);
-}
-
-function updateObserverSimItem(el, data, label) {
-    el.className = `sim-observer-item ${data.active ? 'active' : 'inactive'}`;
-    const icon = label.includes('DeliveryAgent') ? '🚚' : (label.includes('Priya') ? '👩' : '👤');
-    el.innerHTML = `
-        <span class="sim-obs-icon">${icon}</span>
-        <span>${label}</span>
-        <span class="sim-obs-status">${escapeHtml(data.text)}</span>
-    `;
-}
-
-function updateTimelineProgress(activeStageIndex, statusText) {
-    timelineActiveStateText.innerText = statusText;
-    
-    // Percentage for 4 stages: 0=0%, 1=33.3%, 2=66.6%, 3=100%
-    const percentages = [10, 42, 75, 100];
-    timelineProgressFill.style.width = `${percentages[activeStageIndex]}%`;
-
-    timelineSteps.forEach((stepEl, idx) => {
-        stepEl.classList.remove('completed', 'active', 'upcoming');
-        if (idx < activeStageIndex) {
-            stepEl.classList.add('completed');
-            stepEl.querySelector('.step-indicator').innerHTML = `<span class="step-check">✓</span>`;
-        } else if (idx === activeStageIndex) {
-            stepEl.classList.add('active');
-            stepEl.querySelector('.step-indicator').innerHTML = `<span class="step-pulse"></span><span class="step-num">${idx + 1}</span>`;
-        } else {
-            stepEl.classList.add('upcoming');
-            stepEl.querySelector('.step-indicator').innerHTML = `<span class="step-num">${idx + 1}</span>`;
-        }
-    });
-
-    // Also update Stakeholder card 1 current status
-    const subjectCurrentStatus = document.getElementById('subjectCurrentStatus');
-    if (subjectCurrentStatus) {
-        subjectCurrentStatus.innerText = statusText;
-    }
-}
-
-// Notification Stream Filter
-function setupNotificationFilters() {
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const filter = btn.dataset.filter;
-
-            notifCards.forEach(card => {
-                if (filter === 'all') {
-                    card.style.display = 'flex';
-                } else if (card.dataset.type === filter) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-    });
-}
-
 // Event Listeners
-btnRunJava.addEventListener('click', runJavaProgram);
-btnCopyOutput.addEventListener('click', copyConsoleOutput);
-btnToggleSource.addEventListener('click', toggleSourceDrawer);
-
-btnStepNext.addEventListener('click', () => {
-    if (currentSimIndex < SIMULATION_STEPS.length - 1) {
-        currentSimIndex++;
-        renderSimulationStep(currentSimIndex);
-    }
+statusButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const newStatus = btn.dataset.status;
+        changeParcelStatus(newStatus);
+    });
 });
 
-btnStepPrev.addEventListener('click', () => {
-    if (currentSimIndex > 0) {
-        currentSimIndex--;
-        renderSimulationStep(currentSimIndex);
-    }
+filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+        filterPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentFilter = pill.dataset.filter;
+        renderNotifications(localState.notifications);
+    });
 });
 
-btnStepReset.addEventListener('click', () => {
-    clearInterval(autoPlayTimer);
-    btnStepAuto.innerText = 'Auto Play ⏯';
-    currentSimIndex = 0;
-    renderSimulationStep(currentSimIndex);
-});
+addObserverForm.addEventListener('submit', handleAddObserver);
+btnResetDemo.addEventListener('click', handleResetDemo);
 
-btnStepAuto.addEventListener('click', () => {
-    if (autoPlayTimer) {
-        clearInterval(autoPlayTimer);
-        autoPlayTimer = null;
-        btnStepAuto.innerText = 'Auto Play ⏯';
-    } else {
-        btnStepAuto.innerText = 'Pause ⏸';
-        autoPlayTimer = setInterval(() => {
-            if (currentSimIndex < SIMULATION_STEPS.length - 1) {
-                currentSimIndex++;
-            } else {
-                currentSimIndex = 0;
-            }
-            renderSimulationStep(currentSimIndex);
-        }, 2200);
-    }
-});
-
-// Initial startup
-window.addEventListener('DOMContentLoaded', () => {
-    checkServerStatus();
-    setupNotificationFilters();
-    renderSimulationStep(currentSimIndex);
-    loadJavaSource();
-});
+// Start App
+window.addEventListener('DOMContentLoaded', initApp);
