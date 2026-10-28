@@ -1,31 +1,126 @@
 /**
  * SmartParcel Express - Client Application Controller
- * Realistic Real-time Parcel Tracking & Observer Pattern System
+ * Multi-Parcel Real-time Tracking & Observer Pattern System
  */
 
-// Local fallback state (used when opened directly via file:// without server.js)
-let localState = {
-    parcelId: "P101",
-    sender: "Amazon Central Fulfillment - Mumbai Hub",
-    destination: "Janvi Thakre, Pune Central, Maharashtra",
-    status: "Packed",
-    lastUpdated: "Just now",
-    observers: [
-        { id: "obs_1", name: "Rahul", type: "Customer", active: true, registeredAt: "09:00 AM" },
-        { id: "obs_2", name: "Priya", type: "Customer", active: true, registeredAt: "09:15 AM" },
-        { id: "obs_3", name: "Amit", type: "Delivery Agent", active: true, registeredAt: "09:30 AM" }
-    ],
-    notifications: []
+// Local state with multiple parcels (supports both server-backed and offline client mode)
+let parcelsData = {
+    "P101": {
+        parcelId: "P101",
+        recipient: "Rahul Sharma",
+        sender: "Amazon Central Hub (Mumbai)",
+        destination: "Andheri West, Mumbai",
+        status: "Packed",
+        lastUpdated: "Just now",
+        observers: [
+            { id: "obs_1", name: "Rahul Sharma", type: "Customer", active: true, registeredAt: "09:00 AM" },
+            { id: "obs_2", name: "Agent Amit", type: "Delivery Agent", active: true, registeredAt: "09:10 AM" }
+        ],
+        notifications: [
+            {
+                id: "notif_1",
+                recipientName: "Rahul Sharma",
+                recipientType: "Customer",
+                parcelId: "P101",
+                status: "Packed",
+                message: "Hello Rahul Sharma! Your parcel P101 is now: Packed",
+                timestamp: "09:00 AM"
+            },
+            {
+                id: "notif_2",
+                recipientName: "Agent Amit",
+                recipientType: "Delivery Agent",
+                parcelId: "P101",
+                status: "Packed",
+                message: "Agent Amit: Parcel P101 status updated to: Packed",
+                timestamp: "09:10 AM"
+            }
+        ]
+    },
+    "P102": {
+        parcelId: "P102",
+        recipient: "Priya Patel",
+        sender: "Flipkart Logistics (Bangalore)",
+        destination: "Koramangala, Bangalore",
+        status: "Shipped",
+        lastUpdated: "Just now",
+        observers: [
+            { id: "obs_3", name: "Priya Patel", type: "Customer", active: true, registeredAt: "10:15 AM" },
+            { id: "obs_4", name: "Agent Vikram", type: "Delivery Agent", active: true, registeredAt: "10:20 AM" }
+        ],
+        notifications: [
+            {
+                id: "notif_3",
+                recipientName: "Priya Patel",
+                recipientType: "Customer",
+                parcelId: "P102",
+                status: "Shipped",
+                message: "Hello Priya Patel! Your parcel P102 is now: Shipped",
+                timestamp: "10:15 AM"
+            },
+            {
+                id: "notif_4",
+                recipientName: "Agent Vikram",
+                recipientType: "Delivery Agent",
+                parcelId: "P102",
+                status: "Shipped",
+                message: "Agent Vikram: Parcel P102 status updated to: Shipped",
+                timestamp: "10:20 AM"
+            }
+        ]
+    },
+    "P103": {
+        parcelId: "P103",
+        recipient: "Sneha Roy",
+        sender: "Delhivery Hub (Delhi)",
+        destination: "Salt Lake, Kolkata",
+        status: "Out for Delivery",
+        lastUpdated: "Just now",
+        observers: [
+            { id: "obs_5", name: "Sneha Roy", type: "Customer", active: true, registeredAt: "11:00 AM" },
+            { id: "obs_6", name: "Agent Rajesh", type: "Delivery Agent", active: true, registeredAt: "11:05 AM" }
+        ],
+        notifications: [
+            {
+                id: "notif_5",
+                recipientName: "Sneha Roy",
+                recipientType: "Customer",
+                parcelId: "P103",
+                status: "Out for Delivery",
+                message: "Hello Sneha Roy! Your parcel P103 is now: Out for Delivery",
+                timestamp: "11:00 AM"
+            },
+            {
+                id: "notif_6",
+                recipientName: "Agent Rajesh",
+                recipientType: "Delivery Agent",
+                parcelId: "P103",
+                status: "Out for Delivery",
+                message: "Agent Rajesh: Parcel P103 status updated to: Out for Delivery",
+                timestamp: "11:05 AM"
+            }
+        ]
+    }
 };
 
+let activeParcelId = "P101";
 let isConnectedToServer = false;
 const API_BASE = window.location.origin.includes('http') ? window.location.origin : 'http://localhost:3000';
 
 // DOM Elements
+const parcelDropdown = document.getElementById('parcelDropdown');
+const statRecipientPill = document.getElementById('statRecipientPill');
+const statCityPill = document.getElementById('statCityPill');
+
+const displayParcelId = document.getElementById('displayParcelId');
+const displayRecipientName = document.getElementById('displayRecipientName');
+const displaySenderText = document.getElementById('displaySenderText');
+const displayDestinationText = document.getElementById('displayDestinationText');
 const currentStatusBadge = document.getElementById('currentStatusBadge');
 const lastUpdatedText = document.getElementById('lastUpdatedText');
-const displayParcelId = document.getElementById('displayParcelId');
 const timelineBarFill = document.getElementById('timelineBarFill');
+const actionParcelIdText = document.getElementById('actionParcelIdText');
+
 const statusButtons = document.querySelectorAll('.status-action-btn');
 const observersListContainer = document.getElementById('observersListContainer');
 const activeSubCount = document.getElementById('activeSubCount');
@@ -34,7 +129,13 @@ const addObserverForm = document.getElementById('addObserverForm');
 const obsNameInput = document.getElementById('obsNameInput');
 const obsTypeInput = document.getElementById('obsTypeInput');
 const filterPills = document.querySelectorAll('.filter-pill');
-const btnResetDemo = document.getElementById('btnResetDemo');
+
+// Modal Elements
+const btnOpenNewParcelModal = document.getElementById('btnOpenNewParcelModal');
+const newParcelModal = document.getElementById('newParcelModal');
+const btnCloseModal = document.getElementById('btnCloseModal');
+const btnCancelModal = document.getElementById('btnCancelModal');
+const createParcelForm = document.getElementById('createParcelForm');
 const toastContainer = document.getElementById('toastContainer');
 
 const STAGE_CONFIG = {
@@ -46,51 +147,65 @@ const STAGE_CONFIG = {
 
 let currentFilter = 'all';
 
-// Initialize and Fetch Parcel State
+// Initialize
 async function initApp() {
     try {
-        const response = await fetch(`${API_BASE}/api/parcel`);
+        const response = await fetch(`${API_BASE}/api/parcels`);
         if (response.ok) {
             const data = await response.json();
-            localState = data;
             isConnectedToServer = true;
-            renderAll();
-            return;
+            parcelsData = {};
+            data.parcels.forEach(p => { parcelsData[p.parcelId] = p; });
+            activeParcelId = data.activeParcelId || "P101";
         }
     } catch (e) {
-        console.log("Running in offline client mode");
+        console.log("Using client offline database");
     }
 
-    // Fallback: initialize packed alert in client mode
-    if (localState.notifications.length === 0) {
-        clientNotify("Packed");
-    }
-    renderAll();
+    populateDropdown();
+    renderActiveParcel();
 }
 
-// Render complete dashboard
-function renderAll() {
-    renderStatus(localState.status);
-    renderObservers(localState.observers);
-    renderNotifications(localState.notifications);
+// Populate Parcel Dropdown
+function populateDropdown() {
+    parcelDropdown.innerHTML = '';
+    Object.values(parcelsData).forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.parcelId;
+        option.innerText = `#${p.parcelId} — ${p.recipient} (${p.destination.split(',').pop().trim()})`;
+        if (p.parcelId === activeParcelId) {
+            option.selected = true;
+        }
+        parcelDropdown.appendChild(option);
+    });
 }
 
-// Render Status and 4-Stage Timeline
-function renderStatus(status) {
-    currentStatusBadge.innerText = status;
-    lastUpdatedText.innerText = `Updated: ${localState.lastUpdated || 'Just now'}`;
+// Render Currently Selected Parcel
+function renderActiveParcel() {
+    const parcel = parcelsData[activeParcelId];
+    if (!parcel) return;
 
-    const config = STAGE_CONFIG[status] || STAGE_CONFIG["Packed"];
+    // Header & Hero info
+    displayParcelId.innerText = `#${parcel.parcelId}`;
+    displayRecipientName.innerText = parcel.recipient;
+    displaySenderText.innerText = `📍 ${parcel.sender}`;
+    displayDestinationText.innerText = `🏠 ${parcel.destination}`;
+    currentStatusBadge.innerText = parcel.status;
+    lastUpdatedText.innerText = `Updated: ${parcel.lastUpdated || 'Just now'}`;
+    actionParcelIdText.innerText = `Parcel #${parcel.parcelId}`;
 
-    // Update Progress Bar
+    // Quick Stats
+    statRecipientPill.innerText = `Recipient: ${parcel.recipient}`;
+    statCityPill.innerText = `Route: ${parcel.destination.split(',').pop().trim()}`;
+
+    // Update 4-Stage Timeline
+    const config = STAGE_CONFIG[parcel.status] || STAGE_CONFIG["Packed"];
     timelineBarFill.style.width = `${config.progress}%`;
 
-    // Update Timeline Step Nodes
     const stages = ["Packed", "Shipped", "Out for Delivery", "Delivered"];
     stages.forEach((stage, idx) => {
         const nodeEl = document.getElementById(STAGE_CONFIG[stage].node);
         if (!nodeEl) return;
-
         nodeEl.classList.remove('completed', 'active');
         if (idx < config.index) {
             nodeEl.classList.add('completed');
@@ -99,14 +214,20 @@ function renderStatus(status) {
         }
     });
 
-    // Update Dispatch Control Buttons
+    // Update Dispatch Buttons
     statusButtons.forEach(btn => {
-        if (btn.dataset.status === status) {
+        if (btn.dataset.status === parcel.status) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
         }
     });
+
+    // Render Subscribed Observers
+    renderObservers(parcel.observers || []);
+
+    // Render Notifications Feed
+    renderNotifications(parcel.notifications || []);
 }
 
 // Render Subscribed Observers
@@ -114,6 +235,11 @@ function renderObservers(observers) {
     observersListContainer.innerHTML = '';
     const activeCount = observers.filter(o => o.active).length;
     activeSubCount.innerText = `${activeCount} Active`;
+
+    if (observers.length === 0) {
+        observersListContainer.innerHTML = `<div class="empty-notifs">No observers registered yet.</div>`;
+        return;
+    }
 
     observers.forEach(obs => {
         const item = document.createElement('div');
@@ -132,13 +258,12 @@ function renderObservers(observers) {
                 </div>
             </div>
             <div>
-                <button class="btn-toggle-sub ${obs.active ? 'active' : 'inactive'}" data-id="${obs.id}" data-active="${obs.active}">
+                <button class="btn-toggle-sub ${obs.active ? 'active' : 'inactive'}" data-id="${obs.id}">
                     ${obs.active ? '✕ Unsubscribe' : '✓ Re-subscribe'}
                 </button>
             </div>
         `;
 
-        // Event listener for toggle button
         const toggleBtn = item.querySelector('.btn-toggle-sub');
         toggleBtn.addEventListener('click', () => toggleSubscription(obs.id, obs.active, obs.name));
 
@@ -146,7 +271,7 @@ function renderObservers(observers) {
     });
 }
 
-// Render Notifications Feed
+// Render Notifications
 function renderNotifications(notifications) {
     notificationsFeed.innerHTML = '';
 
@@ -158,7 +283,7 @@ function renderNotifications(notifications) {
     if (filtered.length === 0) {
         notificationsFeed.innerHTML = `
             <div class="empty-notifs">
-                No notifications to display for the selected filter.
+                No notifications logged for Parcel #${activeParcelId} in this filter.
             </div>
         `;
         return;
@@ -168,7 +293,6 @@ function renderNotifications(notifications) {
         const card = document.createElement('div');
         const isCustomer = notif.recipientType === 'Customer';
         card.className = `notif-card ${isCustomer ? '' : 'agent-card'}`;
-
         const icon = isCustomer ? '👤' : '🚚';
 
         card.innerHTML = `
@@ -190,8 +314,11 @@ function renderNotifications(notifications) {
 
 // Change Status (Triggers Observer Notifications)
 async function changeParcelStatus(newStatus) {
-    if (localState.status === newStatus) {
-        showToast(`Parcel is already marked as "${newStatus}"`);
+    const parcel = parcelsData[activeParcelId];
+    if (!parcel) return;
+
+    if (parcel.status === newStatus) {
+        showToast(`Parcel #${parcel.parcelId} is already "${newStatus}"`);
         return;
     }
 
@@ -200,54 +327,50 @@ async function changeParcelStatus(newStatus) {
             const res = await fetch(`${API_BASE}/api/update-status`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
+                body: JSON.stringify({ parcelId: activeParcelId, status: newStatus })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                localState = data.parcel;
-                renderAll();
-                const activeCount = data.newNotifications ? data.newNotifications.length : 0;
-                showToast(`Status updated to "${newStatus}"! ${activeCount} observers automatically notified.`);
+                parcelsData[activeParcelId] = data.parcel;
+                renderActiveParcel();
+                const count = data.newNotifications ? data.newNotifications.length : 0;
+                showToast(`Parcel #${activeParcelId} status updated to "${newStatus}"! ${count} observers notified.`);
                 return;
             }
         } catch (e) {
-            console.error("Server error, using client mode", e);
+            console.error(e);
         }
     }
 
     // Client fallback
-    localState.status = newStatus;
-    localState.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const count = clientNotify(newStatus);
-    renderAll();
-    showToast(`Status updated to "${newStatus}"! ${count} observers automatically notified.`);
-}
+    parcel.status = newStatus;
+    parcel.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-// Client Fallback Observer Notification Generator
-function clientNotify(newStatus) {
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const activeObservers = localState.observers.filter(o => o.active);
+    const activeObservers = parcel.observers.filter(o => o.active);
 
     activeObservers.forEach(obs => {
-        let msg = obs.type === 'Customer'
-            ? `Hello ${obs.name}! Your parcel ${localState.parcelId} is now: ${newStatus}`
-            : `Agent ${obs.name}: Parcel ${localState.parcelId} status updated to: ${newStatus}`;
+        const msg = obs.type === 'Customer'
+            ? `Hello ${obs.name}! Your parcel ${parcel.parcelId} is now: ${newStatus}`
+            : `Agent ${obs.name}: Parcel ${parcel.parcelId} status updated to: ${newStatus}`;
 
-        localState.notifications.unshift({
+        parcel.notifications.unshift({
             id: 'notif_' + Date.now() + Math.random(),
             recipientName: obs.name,
             recipientType: obs.type,
+            parcelId: parcel.parcelId,
             status: newStatus,
             message: msg,
             timestamp: timestamp
         });
     });
 
-    return activeObservers.length;
+    renderActiveParcel();
+    showToast(`Parcel #${activeParcelId} status updated to "${newStatus}"! ${activeObservers.length} observers notified.`);
 }
 
-// Toggle Subscription (Unsubscribe or Re-subscribe)
+// Toggle Subscription
 async function toggleSubscription(obsId, currentlyActive, obsName) {
     const endpoint = currentlyActive ? '/api/unsubscribe' : '/api/resubscribe';
 
@@ -256,16 +379,16 @@ async function toggleSubscription(obsId, currentlyActive, obsName) {
             const res = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: obsId })
+                body: JSON.stringify({ parcelId: activeParcelId, id: obsId })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                localState = data.parcel;
-                renderAll();
+                parcelsData[activeParcelId] = data.parcel;
+                renderActiveParcel();
                 showToast(currentlyActive 
-                    ? `✕ ${obsName} unsubscribed. They will no longer receive alerts.` 
-                    : `✓ ${obsName} re-subscribed to notifications!`
+                    ? `✕ ${obsName} unsubscribed from Parcel #${activeParcelId}` 
+                    : `✓ ${obsName} re-subscribed to Parcel #${activeParcelId}!`
                 );
                 return;
             }
@@ -275,23 +398,23 @@ async function toggleSubscription(obsId, currentlyActive, obsName) {
     }
 
     // Client fallback
-    const target = localState.observers.find(o => o.id === obsId);
+    const parcel = parcelsData[activeParcelId];
+    const target = parcel.observers.find(o => o.id === obsId);
     if (target) {
         target.active = !currentlyActive;
-        renderAll();
+        renderActiveParcel();
         showToast(currentlyActive 
-            ? `✕ ${obsName} unsubscribed. They will no longer receive alerts.` 
-            : `✓ ${obsName} re-subscribed to notifications!`
+            ? `✕ ${obsName} unsubscribed from Parcel #${activeParcelId}` 
+            : `✓ ${obsName} re-subscribed to Parcel #${activeParcelId}!`
         );
     }
 }
 
-// Add New Observer
+// Add New Observer to Active Parcel
 async function handleAddObserver(e) {
     e.preventDefault();
     const name = obsNameInput.value.trim();
     const type = obsTypeInput.value;
-
     if (!name) return;
 
     if (isConnectedToServer) {
@@ -299,15 +422,15 @@ async function handleAddObserver(e) {
             const res = await fetch(`${API_BASE}/api/subscribe`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, type })
+                body: JSON.stringify({ parcelId: activeParcelId, name, type })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                localState = data.parcel;
+                parcelsData[activeParcelId] = data.parcel;
                 obsNameInput.value = '';
-                renderAll();
-                showToast(`✓ Subscribed new ${type}: ${name}`);
+                renderActiveParcel();
+                showToast(`✓ Subscribed ${type} "${name}" to Parcel #${activeParcelId}`);
                 return;
             }
         } catch (e) {
@@ -316,7 +439,8 @@ async function handleAddObserver(e) {
     }
 
     // Client fallback
-    localState.observers.push({
+    const parcel = parcelsData[activeParcelId];
+    parcel.observers.push({
         id: 'obs_' + Date.now(),
         name: name,
         type: type,
@@ -324,20 +448,41 @@ async function handleAddObserver(e) {
         registeredAt: 'Just now'
     });
     obsNameInput.value = '';
-    renderAll();
-    showToast(`✓ Subscribed new ${type}: ${name}`);
+    renderActiveParcel();
+    showToast(`✓ Subscribed ${type} "${name}" to Parcel #${activeParcelId}`);
 }
 
-// Reset Demo State
-async function handleResetDemo() {
+// Create New Consignment / Parcel
+async function handleCreateParcel(e) {
+    e.preventDefault();
+    const id = document.getElementById('newParcelId').value.trim().toUpperCase();
+    const recipient = document.getElementById('newRecipientName').value.trim();
+    const sender = document.getElementById('newSender').value.trim() || 'Central Dispatch Hub';
+    const destination = document.getElementById('newDestination').value.trim();
+
+    if (!id || !recipient) return;
+
+    if (parcelsData[id]) {
+        alert(`Parcel #${id} already exists! Please choose another ID.`);
+        return;
+    }
+
     if (isConnectedToServer) {
         try {
-            const res = await fetch(`${API_BASE}/api/reset`, { method: 'POST' });
+            const res = await fetch(`${API_BASE}/api/parcel/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parcelId: id, recipient, sender, destination })
+            });
+
             if (res.ok) {
                 const data = await res.json();
-                localState = data.parcel;
-                renderAll();
-                showToast("System reset back to initial state (Packed).");
+                parcelsData[id] = data.parcel;
+                activeParcelId = id;
+                closeModal();
+                populateDropdown();
+                renderActiveParcel();
+                showToast(`✓ Consignment #${id} created for ${recipient}!`);
                 return;
             }
         } catch (e) {
@@ -345,23 +490,49 @@ async function handleResetDemo() {
         }
     }
 
-    // Client fallback reset
-    localState = {
-        parcelId: "P101",
-        sender: "Amazon Central Fulfillment - Mumbai Hub",
-        destination: "Janvi Thakre, Pune Central, Maharashtra",
+    // Client fallback
+    const newParcel = {
+        parcelId: id,
+        recipient: recipient,
+        sender: sender,
+        destination: destination,
         status: "Packed",
         lastUpdated: "Just now",
         observers: [
-            { id: "obs_1", name: "Rahul", type: "Customer", active: true, registeredAt: "09:00 AM" },
-            { id: "obs_2", name: "Priya", type: "Customer", active: true, registeredAt: "09:15 AM" },
-            { id: "obs_3", name: "Amit", type: "Delivery Agent", active: true, registeredAt: "09:30 AM" }
+            { id: "obs_" + Date.now(), name: recipient, type: "Customer", active: true, registeredAt: "Just now" },
+            { id: "obs_" + (Date.now() + 1), name: "Agent Assigned", type: "Delivery Agent", active: true, registeredAt: "Just now" }
         ],
-        notifications: []
+        notifications: [
+            {
+                id: "notif_" + Date.now(),
+                recipientName: recipient,
+                recipientType: "Customer",
+                parcelId: id,
+                status: "Packed",
+                message: `Hello ${recipient}! Your parcel ${id} is now: Packed`,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+        ]
     };
-    clientNotify("Packed");
-    renderAll();
-    showToast("System reset back to initial state (Packed).");
+
+    parcelsData[id] = newParcel;
+    activeParcelId = id;
+    closeModal();
+    populateDropdown();
+    renderActiveParcel();
+    showToast(`✓ Consignment #${id} created for ${recipient}!`);
+}
+
+// Modal Helpers
+function openModal() {
+    newParcelModal.classList.add('open');
+    document.getElementById('newParcelId').value = `P${Math.floor(100 + Math.random() * 900)}`;
+    document.getElementById('newRecipientName').value = '';
+    document.getElementById('newDestination').value = '';
+}
+
+function closeModal() {
+    newParcelModal.classList.remove('open');
 }
 
 // Show Toast Alert Notification
@@ -380,7 +551,6 @@ function showToast(message) {
     }, 3200);
 }
 
-// Escape HTML helper
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.innerText = text;
@@ -388,6 +558,11 @@ function escapeHtml(text) {
 }
 
 // Event Listeners
+parcelDropdown.addEventListener('change', (e) => {
+    activeParcelId = e.target.value;
+    renderActiveParcel();
+});
+
 statusButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const newStatus = btn.dataset.status;
@@ -400,12 +575,16 @@ filterPills.forEach(pill => {
         filterPills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         currentFilter = pill.dataset.filter;
-        renderNotifications(localState.notifications);
+        const parcel = parcelsData[activeParcelId];
+        renderNotifications(parcel ? parcel.notifications : []);
     });
 });
 
 addObserverForm.addEventListener('submit', handleAddObserver);
-btnResetDemo.addEventListener('click', handleResetDemo);
 
-// Start App
+btnOpenNewParcelModal.addEventListener('click', openModal);
+btnCloseModal.addEventListener('click', closeModal);
+btnCancelModal.addEventListener('click', closeModal);
+createParcelForm.addEventListener('submit', handleCreateParcel);
+
 window.addEventListener('DOMContentLoaded', initApp);

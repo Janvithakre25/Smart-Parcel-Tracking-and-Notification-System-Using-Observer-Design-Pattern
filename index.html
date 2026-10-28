@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartParcel Express | Real-Time Tracking & Notification System</title>
+    <title>SmartParcel Express | Real-Time Multi-Parcel Tracking System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,10 +31,10 @@
             <div class="header-actions">
                 <div class="live-status-pill">
                     <span class="live-pulse"></span>
-                    <span>System Active • Live Dispatch</span>
+                    <span>Live Tracking Active</span>
                 </div>
-                <button class="btn btn-sm btn-ghost" id="btnResetDemo" title="Reset Parcel &amp; Observers to Initial State">
-                    ↺ Reset Demo
+                <button class="btn btn-sm btn-primary" id="btnOpenNewParcelModal">
+                    + New Parcel
                 </button>
             </div>
         </div>
@@ -43,20 +43,42 @@
     <!-- Main Dashboard Container -->
     <main class="dashboard-container">
 
-        <!-- Top Row: Parcel Overview & Live Tracking Progress -->
+        <!-- Parcel Switcher & Selector Bar -->
+        <section class="parcel-selector-bar card">
+            <div class="selector-content">
+                <div class="selector-label">
+                    <span class="label-icon">🔍</span>
+                    <span class="label-text">Select Active Consignment:</span>
+                </div>
+                <div class="selector-control-wrap">
+                    <select id="parcelDropdown" class="parcel-dropdown">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="parcel-quick-stats">
+                    <span class="stat-pill" id="statRecipientPill">Recipient: Rahul Sharma</span>
+                    <span class="stat-pill" id="statCityPill">City: Mumbai</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Row: Active Parcel Overview & Live Tracking Progress -->
         <section class="card tracking-hero-card">
             <div class="card-header-flex">
                 <div>
                     <span class="badge-label">Active Consignment</span>
                     <h2 class="parcel-id-title">Parcel <span id="displayParcelId">#P101</span></h2>
+                    <p class="parcel-recipient-lead">
+                        Recipient: <strong id="displayRecipientName">Rahul Sharma</strong>
+                    </p>
                     <p class="parcel-route-text">
-                        <span class="route-from">📍 Mumbai Hub (Warehouse)</span>
+                        <span class="route-from" id="displaySenderText">📍 Mumbai Central Hub</span>
                         <span class="route-arrow">➔</span>
-                        <span class="route-to">🏠 Pune Central (Janvi Thakre)</span>
+                        <span class="route-to" id="displayDestinationText">🏠 Andheri West, Mumbai</span>
                     </p>
                 </div>
                 <div class="current-status-box">
-                    <span class="status-sub-label">Current Status</span>
+                    <span class="status-sub-label">Delivery Status</span>
                     <div class="status-badge" id="currentStatusBadge">Packed</div>
                     <span class="last-updated-text" id="lastUpdatedText">Updated: Just now</span>
                 </div>
@@ -98,7 +120,7 @@
                         </div>
                         <div class="node-info">
                             <span class="node-title">Out for Delivery</span>
-                            <span class="node-sub">Delivery Van</span>
+                            <span class="node-sub">Courier Van</span>
                         </div>
                     </div>
 
@@ -122,11 +144,11 @@
                 <div>
                     <h3 class="section-title">⚡ Courier Dispatch Controls</h3>
                     <p class="section-desc">
-                        Click any status below to simulate the parcel's journey. 
-                        <strong>Subscribed customers and delivery agents will automatically receive instant alerts!</strong>
+                        Update the delivery status for <strong id="actionParcelIdText">Parcel #P101</strong>. 
+                        <strong>All subscribed observers for this parcel will receive automatic alerts!</strong>
                     </p>
                 </div>
-                <span class="observer-tag">Observer Pattern in Action</span>
+                <span class="observer-tag">Observer Pattern</span>
             </div>
 
             <div class="status-buttons-row">
@@ -157,14 +179,14 @@
                 <div class="card-title-flex">
                     <div>
                         <h3 class="section-title">👥 Subscribed Observers</h3>
-                        <p class="section-desc">Entities registered to receive real-time parcel updates.</p>
+                        <p class="section-desc">Observers registered specifically for this parcel.</p>
                     </div>
-                    <span class="sub-counter-badge" id="activeSubCount">3 Active</span>
+                    <span class="sub-counter-badge" id="activeSubCount">2 Active</span>
                 </div>
 
                 <!-- Add New Subscriber Form -->
                 <form id="addObserverForm" class="add-observer-form">
-                    <input type="text" id="obsNameInput" placeholder="Enter Name (e.g. Sneha)" required>
+                    <input type="text" id="obsNameInput" placeholder="Name (e.g. Vikas)" required>
                     <select id="obsTypeInput">
                         <option value="Customer">Customer</option>
                         <option value="Delivery Agent">Delivery Agent</option>
@@ -181,7 +203,7 @@
 
                 <div class="unsub-tip">
                     <span class="tip-icon">💡</span>
-                    <span><strong>Test Unsubscribe:</strong> Click "Unsubscribe" on Priya, then change status to "Out for Delivery". Rahul and Amit will receive alerts, but Priya will not!</span>
+                    <span><strong>Unsubscribe Test:</strong> Click "Unsubscribe" on any observer. When status changes next, they will receive 0 notifications!</span>
                 </div>
             </section>
 
@@ -189,8 +211,8 @@
             <section class="card notifications-stream-card">
                 <div class="card-title-flex">
                     <div>
-                        <h3 class="section-title">🔔 Live Notification Feed</h3>
-                        <p class="section-desc">Instant alerts triggered automatically when parcel status changes.</p>
+                        <h3 class="section-title">🔔 Real-Time Notification Feed</h3>
+                        <p class="section-desc">Instant alerts dispatched for this consignment.</p>
                     </div>
                     <div class="notif-filter-tabs">
                         <button class="filter-pill active" data-filter="all">All</button>
@@ -209,11 +231,43 @@
 
     </main>
 
+    <!-- Modal: Create New Parcel -->
+    <div class="modal-backdrop" id="newParcelModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">📦 Register New Consignment</h3>
+                <button class="btn-close-modal" id="btnCloseModal">✕</button>
+            </div>
+            <form id="createParcelForm">
+                <div class="form-group">
+                    <label>Parcel Tracking ID</label>
+                    <input type="text" id="newParcelId" placeholder="e.g. P104" required>
+                </div>
+                <div class="form-group">
+                    <label>Recipient Full Name</label>
+                    <input type="text" id="newRecipientName" placeholder="e.g. Anita Deshmukh" required>
+                </div>
+                <div class="form-group">
+                    <label>Origin Hub / Sender</label>
+                    <input type="text" id="newSender" placeholder="e.g. Pune Logistics Hub" value="Pune Logistics Hub">
+                </div>
+                <div class="form-group">
+                    <label>Destination Address / City</label>
+                    <input type="text" id="newDestination" placeholder="e.g. Viman Nagar, Pune" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" id="btnCancelModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create &amp; Track</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Alert Popup Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <footer class="app-footer">
-        <p>SmartParcel Express • Smart Parcel Tracking and Notification System</p>
+        <p>SmartParcel Express • Smart Parcel Tracking and Notification System Using Observer Design Pattern</p>
     </footer>
 
     <script src="app.js"></script>

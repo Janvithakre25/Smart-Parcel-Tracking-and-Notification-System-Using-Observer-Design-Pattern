@@ -1,6 +1,6 @@
 /**
  * Smart Parcel Tracking and Notification System
- * Realistic Web Application Backend Server (Zero External Dependencies)
+ * Multi-Parcel Real-time Courier System (Observer Pattern)
  */
 
 const http = require('http');
@@ -9,59 +9,141 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-// ==========================================
-// In-Memory Observer Pattern State (Parcel Subject)
-// ==========================================
-let parcelState = {
-    parcelId: "P101",
-    sender: "Amazon Central Fulfillment - Mumbai Hub",
-    destination: "Janvi Thakre, Pune Central, Maharashtra",
-    status: "Packed", // Packed, Shipped, Out for Delivery, Delivered
-    lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    observers: [
-        { id: "obs_1", name: "Rahul", type: "Customer", active: true, registeredAt: "09:00 AM" },
-        { id: "obs_2", name: "Priya", type: "Customer", active: true, registeredAt: "09:15 AM" },
-        { id: "obs_3", name: "Amit", type: "Delivery Agent", active: true, registeredAt: "09:30 AM" }
-    ],
-    notifications: []
+// Multi-parcel in-memory database
+let parcels = {
+    "P101": {
+        parcelId: "P101",
+        recipient: "Rahul Sharma",
+        sender: "Amazon Central Hub (Mumbai)",
+        destination: "Andheri West, Mumbai",
+        status: "Packed",
+        lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        observers: [
+            { id: "obs_1", name: "Rahul Sharma", type: "Customer", active: true, registeredAt: "09:00 AM" },
+            { id: "obs_2", name: "Agent Amit", type: "Delivery Agent", active: true, registeredAt: "09:10 AM" }
+        ],
+        notifications: [
+            {
+                id: "notif_1",
+                recipientName: "Rahul Sharma",
+                recipientType: "Customer",
+                parcelId: "P101",
+                status: "Packed",
+                message: "Hello Rahul Sharma! Your parcel P101 is now: Packed",
+                timestamp: "09:00 AM"
+            },
+            {
+                id: "notif_2",
+                recipientName: "Agent Amit",
+                recipientType: "Delivery Agent",
+                parcelId: "P101",
+                status: "Packed",
+                message: "Agent Amit: Parcel P101 status updated to: Packed",
+                timestamp: "09:10 AM"
+            }
+        ]
+    },
+    "P102": {
+        parcelId: "P102",
+        recipient: "Priya Patel",
+        sender: "Flipkart Logistics (Bangalore)",
+        destination: "Koramangala, Bangalore",
+        status: "Shipped",
+        lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        observers: [
+            { id: "obs_3", name: "Priya Patel", type: "Customer", active: true, registeredAt: "10:15 AM" },
+            { id: "obs_4", name: "Agent Vikram", type: "Delivery Agent", active: true, registeredAt: "10:20 AM" }
+        ],
+        notifications: [
+            {
+                id: "notif_3",
+                recipientName: "Priya Patel",
+                recipientType: "Customer",
+                parcelId: "P102",
+                status: "Shipped",
+                message: "Hello Priya Patel! Your parcel P102 is now: Shipped",
+                timestamp: "10:15 AM"
+            },
+            {
+                id: "notif_4",
+                recipientName: "Agent Vikram",
+                recipientType: "Delivery Agent",
+                parcelId: "P102",
+                status: "Shipped",
+                message: "Agent Vikram: Parcel P102 status updated to: Shipped",
+                timestamp: "10:20 AM"
+            }
+        ]
+    },
+    "P103": {
+        parcelId: "P103",
+        recipient: "Sneha Roy",
+        sender: "Delhivery Hub (Delhi)",
+        destination: "Salt Lake, Kolkata",
+        status: "Out for Delivery",
+        lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        observers: [
+            { id: "obs_5", name: "Sneha Roy", type: "Customer", active: true, registeredAt: "11:00 AM" },
+            { id: "obs_6", name: "Agent Rajesh", type: "Delivery Agent", active: true, registeredAt: "11:05 AM" }
+        ],
+        notifications: [
+            {
+                id: "notif_5",
+                recipientName: "Sneha Roy",
+                recipientType: "Customer",
+                parcelId: "P103",
+                status: "Out for Delivery",
+                message: "Hello Sneha Roy! Your parcel P103 is now: Out for Delivery",
+                timestamp: "11:00 AM"
+            },
+            {
+                id: "notif_6",
+                recipientName: "Agent Rajesh",
+                recipientType: "Delivery Agent",
+                parcelId: "P103",
+                status: "Out for Delivery",
+                message: "Agent Rajesh: Parcel P103 status updated to: Out for Delivery",
+                timestamp: "11:05 AM"
+            }
+        ]
+    }
 };
 
-// Function: Notify all active observers when status changes (Observer Pattern)
-function notifyObservers(oldStatus, newStatus) {
+let activeParcelId = "P101";
+
+// Trigger Observer notifications on status change
+function notifyParcelObservers(parcel, newStatus) {
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const newNotifications = [];
 
-    const activeObservers = parcelState.observers.filter(o => o.active);
+    const activeObservers = parcel.observers.filter(o => o.active);
 
     activeObservers.forEach(obs => {
         let message = "";
         if (obs.type === "Customer") {
-            message = `Hello ${obs.name}! Your parcel ${parcelState.parcelId} is now: ${newStatus}`;
+            message = `Hello ${obs.name}! Your parcel ${parcel.parcelId} is now: ${newStatus}`;
         } else {
-            message = `Agent ${obs.name}: Parcel ${parcelState.parcelId} status updated to: ${newStatus}`;
+            message = `Agent ${obs.name}: Parcel ${parcel.parcelId} status updated to: ${newStatus}`;
         }
 
         const notif = {
             id: "notif_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
             recipientName: obs.name,
             recipientType: obs.type,
-            parcelId: parcelState.parcelId,
+            parcelId: parcel.parcelId,
             status: newStatus,
             message: message,
             timestamp: timestamp
         };
 
         newNotifications.push(notif);
-        parcelState.notifications.unshift(notif); // Add to top of list
+        parcel.notifications.unshift(notif);
     });
 
     return newNotifications;
 }
 
-// Initial trigger for packed stage
-notifyObservers("", "Packed");
-
-// Helper to parse JSON body
+// Parse JSON Body
 function parseRequestBody(req, callback) {
     let body = '';
     req.on('data', chunk => { body += chunk.toString(); });
@@ -75,18 +157,13 @@ function parseRequestBody(req, callback) {
     });
 }
 
-// MIME types dictionary
 const MIME_TYPES = {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
     '.js': 'application/javascript; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.svg': 'image/svg+xml'
+    '.json': 'application/json; charset=utf-8'
 };
 
-// Create HTTP server
 const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -101,57 +178,105 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
 
-    // API: Get Current Parcel & Observer State
-    if (pathname === '/api/parcel' && req.method === 'GET') {
+    // GET /api/parcels - List all parcels
+    if (pathname === '/api/parcels' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(parcelState));
+        res.end(JSON.stringify({
+            activeParcelId: activeParcelId,
+            parcels: Object.values(parcels)
+        }));
         return;
     }
 
-    // API: Update Parcel Status (Triggers Observer Pattern)
-    if (pathname === '/api/update-status' && req.method === 'POST') {
+    // GET /api/parcel - Get active parcel
+    if (pathname === '/api/parcel' && req.method === 'GET') {
+        const id = url.searchParams.get('id') || activeParcelId;
+        const target = parcels[id] || parcels[activeParcelId];
+        activeParcelId = target.parcelId;
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(target));
+        return;
+    }
+
+    // POST /api/parcel/create - Create a brand new parcel
+    if (pathname === '/api/parcel/create' && req.method === 'POST') {
         parseRequestBody(req, (err, data) => {
-            if (err || !data.status) {
+            if (err || !data.parcelId || !data.recipient) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: "Invalid status provided" }));
+                res.end(JSON.stringify({ error: "Parcel ID and recipient are required" }));
                 return;
             }
 
-            const oldStatus = parcelState.status;
-            const newStatus = data.status;
-
-            if (oldStatus === newStatus) {
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    changed: false,
-                    message: `Status is already ${newStatus}`,
-                    parcel: parcelState,
-                    newNotifications: []
-                }));
+            const id = data.parcelId.trim().toUpperCase();
+            if (parcels[id]) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: `Parcel ${id} already exists!` }));
                 return;
             }
 
-            parcelState.status = newStatus;
-            parcelState.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const dispatched = notifyObservers(oldStatus, newStatus);
+            const newParcel = {
+                parcelId: id,
+                recipient: data.recipient.trim(),
+                sender: data.sender ? data.sender.trim() : "Central Dispatch Hub",
+                destination: data.destination ? data.destination.trim() : "Local Delivery Zone",
+                status: "Packed",
+                lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                observers: [
+                    { id: "obs_" + Date.now(), name: data.recipient.trim(), type: "Customer", active: true, registeredAt: "Just now" },
+                    { id: "obs_" + (Date.now() + 1), name: "Agent Assigned", type: "Delivery Agent", active: true, registeredAt: "Just now" }
+                ],
+                notifications: []
+            };
 
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                changed: true,
-                message: `Status updated to ${newStatus}`,
-                parcel: parcelState,
-                newNotifications: dispatched
-            }));
+            notifyParcelObservers(newParcel, "Packed");
+            parcels[id] = newParcel;
+            activeParcelId = id;
+
+            res.writeHead(201, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, parcel: newParcel }));
         });
         return;
     }
 
-    // API: Subscribe new Observer
+    // POST /api/update-status - Update status of active parcel
+    if (pathname === '/api/update-status' && req.method === 'POST') {
+        parseRequestBody(req, (err, data) => {
+            const id = data.parcelId || activeParcelId;
+            const target = parcels[id];
+            if (!target) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Parcel not found" }));
+                return;
+            }
+
+            const oldStatus = target.status;
+            const newStatus = data.status;
+
+            if (oldStatus === newStatus) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ changed: false, parcel: target, newNotifications: [] }));
+                return;
+            }
+
+            target.status = newStatus;
+            target.lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dispatched = notifyParcelObservers(target, newStatus);
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ changed: true, parcel: target, newNotifications: dispatched }));
+        });
+        return;
+    }
+
+    // POST /api/subscribe - Add observer to active parcel
     if (pathname === '/api/subscribe' && req.method === 'POST') {
         parseRequestBody(req, (err, data) => {
-            if (err || !data.name || !data.type) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: "Name and type (Customer/Delivery Agent) required" }));
+            const id = data.parcelId || activeParcelId;
+            const target = parcels[id];
+            if (!target) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Parcel not found" }));
                 return;
             }
 
@@ -163,37 +288,30 @@ const server = http.createServer((req, res) => {
                 registeredAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
 
-            parcelState.observers.push(newObserver);
+            target.observers.push(newObserver);
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-                success: true,
-                message: `${newObserver.name} subscribed successfully`,
-                observer: newObserver,
-                parcel: parcelState
-            }));
+            res.end(JSON.stringify({ success: true, observer: newObserver, parcel: target }));
         });
         return;
     }
 
-    // API: Unsubscribe an Observer
+    // POST /api/unsubscribe - Unsubscribe observer
     if (pathname === '/api/unsubscribe' && req.method === 'POST') {
         parseRequestBody(req, (err, data) => {
-            if (err || !data.id) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: "Observer ID is required" }));
+            const id = data.parcelId || activeParcelId;
+            const target = parcels[id];
+            if (!target) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: "Parcel not found" }));
                 return;
             }
 
-            const target = parcelState.observers.find(o => o.id === data.id);
-            if (target) {
-                target.active = false;
+            const obs = target.observers.find(o => o.id === data.id);
+            if (obs) {
+                obs.active = false;
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    success: true,
-                    message: `${target.name} unsubscribed. They will no longer receive notifications.`,
-                    parcel: parcelState
-                }));
+                res.end(JSON.stringify({ success: true, parcel: target }));
             } else {
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: "Observer not found" }));
@@ -202,51 +320,26 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // API: Re-subscribe an Observer
+    // POST /api/resubscribe - Re-subscribe observer
     if (pathname === '/api/resubscribe' && req.method === 'POST') {
         parseRequestBody(req, (err, data) => {
-            const target = parcelState.observers.find(o => o.id === data.id);
-            if (target) {
-                target.active = true;
+            const id = data.parcelId || activeParcelId;
+            const target = parcels[id];
+            const obs = target ? target.observers.find(o => o.id === data.id) : null;
+            if (obs) {
+                obs.active = true;
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    success: true,
-                    message: `${target.name} re-subscribed to parcel notifications.`,
-                    parcel: parcelState
-                }));
+                res.end(JSON.stringify({ success: true, parcel: target }));
             } else {
                 res.writeHead(404, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: "Observer not found" }));
             }
         });
-        return;
-    }
-
-    // API: Reset Demo to Default State
-    if (pathname === '/api/reset' && req.method === 'POST') {
-        parcelState = {
-            parcelId: "P101",
-            sender: "Amazon Central Fulfillment - Mumbai Hub",
-            destination: "Janvi Thakre, Pune Central, Maharashtra",
-            status: "Packed",
-            lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            observers: [
-                { id: "obs_1", name: "Rahul", type: "Customer", active: true, registeredAt: "09:00 AM" },
-                { id: "obs_2", name: "Priya", type: "Customer", active: true, registeredAt: "09:15 AM" },
-                { id: "obs_3", name: "Amit", type: "Delivery Agent", active: true, registeredAt: "09:30 AM" }
-            ],
-            notifications: []
-        };
-        notifyObservers("", "Packed");
-
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, parcel: parcelState }));
         return;
     }
 
     // Static File Serving
     let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
-
     if (!filePath.startsWith(__dirname)) {
         res.writeHead(403);
         res.end('Forbidden');
@@ -269,9 +362,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
     console.log(`================================================================`);
-    console.log(`📦 Smart Parcel Tracking & Notification Portal`);
-    console.log(`================================================================`);
+    console.log(`📦 SmartParcel Express - Multi-Parcel Real-time System`);
     console.log(`📍 Web URL   : http://localhost:${PORT}`);
-    console.log(`🚀 Real-time Observer Pattern system ready!`);
     console.log(`================================================================\n`);
 });

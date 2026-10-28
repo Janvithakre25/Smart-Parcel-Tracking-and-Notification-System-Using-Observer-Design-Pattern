@@ -159,11 +159,11 @@ body {
 /* Dashboard Container */
 .dashboard-container {
     max-width: 1280px;
-    margin: 1.75rem auto;
+    margin: 1.5rem auto;
     padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.5rem;
     flex: 1;
     width: 100%;
 }
@@ -180,6 +180,71 @@ body {
 
 .card:hover {
     box-shadow: var(--shadow-md);
+}
+
+/* Parcel Selector Bar */
+.parcel-selector-bar {
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border-left: 4px solid var(--primary);
+}
+
+.selector-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.selector-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--navy-900);
+}
+
+.selector-control-wrap {
+    flex: 1;
+    min-width: 250px;
+}
+
+.parcel-dropdown {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 0.6rem 1rem;
+    border: 1.5px solid var(--primary-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.parcel-dropdown:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.parcel-quick-stats {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.stat-pill {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--gray-200);
 }
 
 /* Tracking Hero Card */
@@ -222,10 +287,20 @@ body {
     font-family: var(--font-mono);
 }
 
+.parcel-recipient-lead {
+    font-size: 1.05rem;
+    color: var(--navy-900);
+    margin-top: 0.25rem;
+}
+
+.parcel-recipient-lead strong {
+    color: var(--primary-dark);
+}
+
 .parcel-route-text {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--gray-600);
-    margin-top: 0.35rem;
+    margin-top: 0.25rem;
     display: flex;
     align-items: center;
     gap: 0.6rem;
@@ -520,8 +595,8 @@ body {
 }
 
 .btn-sm {
-    padding: 0.35rem 0.75rem;
-    font-size: 0.78rem;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
 }
 
 /* Observers List */
@@ -756,6 +831,101 @@ body {
     font-size: 0.9rem;
 }
 
+/* Modal: Create New Parcel */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-backdrop.open {
+    display: flex;
+}
+
+.modal-card {
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    padding: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    animation: modalScale 0.25s ease-out;
+}
+
+@keyframes modalScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--navy-900);
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: var(--gray-400);
+    transition: var(--transition);
+}
+
+.btn-close-modal:hover {
+    color: var(--navy-900);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1.15rem;
+}
+
+.form-group label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--navy-800);
+}
+
+.form-group input {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
 /* Toast Alerts Container */
 .toast-container {
     position: fixed;
@@ -824,5 +994,10 @@ body {
 
     .node-circle {
         margin-bottom: 0;
+    }
+
+    .selector-content {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
