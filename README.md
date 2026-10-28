@@ -1,94 +1,107 @@
-# Smart Parcel Tracking and Notification System
+# Smart Parcel Tracking and Notification System Using Observer Design Pattern in Java
 
-A college mini project demonstrating the **Observer Design Pattern** in Java with a Spring Boot backend and an interactive HTML/CSS/JavaScript web frontend.
-
----
-
-## 📌 1. Project Overview
-
-The **Smart Parcel Tracking and Notification System** demonstrates how the **Observer Design Pattern** enables loose coupling between a state-changing entity (the `Parcel`, acting as the **Subject**) and multiple interested parties (`Customer` and `DeliveryAgent`, acting as **Observers**).
-
-When an administrator updates a parcel's status (e.g. from `Packed` to `Shipped`), all subscribed observers are automatically notified with tailored messages—without the Parcel having to know the concrete implementation details of its observers.
+A college mini project demonstrating the **Observer Design Pattern** in pure, unedited Java with a modern **blue-and-white** web dashboard and an external launcher integration layer.
 
 ---
 
-## 🛠️ 2. Technologies Used
+## 📌 1. Project Overview & Code Integrity Guarantee
 
-- **Backend**: Java 17+, Spring Boot 3.2.0 (Spring Web, Spring Test)
-- **Design Pattern**: Observer Design Pattern (manual implementation)
-- **Data Storage**: In-Memory Java Collections (`HashMap`, `ArrayList`)
-- **Frontend**: HTML5, Modern CSS3 (Flexbox/Grid, Responsive), Vanilla JavaScript (Fetch API)
-- **Build Tool**: Maven
+### Strict Requirement Compliance
+- **Zero Modifications to Java**: The student's original Java code in [`Main.java`](Main.java) is **100% UNCHANGED**.
+- **No Extra Methods**: No getters, setters, controllers, or helper methods were added.
+- **No Spring Boot / No Database**: Pure Java SE standard library (`java.util.ArrayList`, `java.util.List`).
+- **Real Integration Layer**: An external launcher (`server.js`) compiles and executes the unedited `Main.java` on the JVM and streams its verbatim standard output directly into the web dashboard.
+- **Academic Transparency**: Clearly distinguishes between **Actual Java-Backed JVM Execution** and the **Interactive Visual Stepper (Client-Side Simulation)**.
 
 ---
 
-## 📐 3. Observer Design Pattern Mapping
+## 📐 2. Observer Design Pattern Mapping
 
-| Pattern Component | Project Class / Interface | Role & Responsibility |
+| Pattern Participant | Java Component in `Main.java` | Role & Responsibility |
 | :--- | :--- | :--- |
-| **Subject Interface** | [`ParcelSubject`](src/main/java/com/parceltracker/observer/ParcelSubject.java) | Declares methods: `registerObserver()`, `removeObserver()`, `notifyObservers()` |
-| **Concrete Subject** | [`Parcel`](src/main/java/com/parceltracker/model/Parcel.java) | Maintains list of observers (`List<ParcelObserver>`), manages status, and invokes `notifyObservers()` inside `setStatus()` |
-| **Observer Interface** | [`ParcelObserver`](src/main/java/com/parceltracker/observer/ParcelObserver.java) | Declares `update(parcelId, status)` callback and identity methods |
-| **Concrete Observer #1** | [`Customer`](src/main/java/com/parceltracker/observer/Customer.java) | Implements `update()` to store customer-friendly notification history |
-| **Concrete Observer #2** | [`DeliveryAgent`](src/main/java/com/parceltracker/observer/DeliveryAgent.java) | Implements `update()` to store action-oriented notifications for field agents |
+| **Observer Interface** | `interface Observer` | Declares the notification contract: `void update(String parcelId, String status)`. |
+| **Concrete Observer 1** | `class Customer` | Implements `update()` to print customer-tailored status alerts: `"Hello <name>! Your parcel <id> is now: <status>"`. |
+| **Concrete Observer 2** | `class DeliveryAgent` | Implements `update()` to print courier-tailored status alerts: `"Agent <name>: Parcel <id> status updated to: <status>"`. |
+| **Concrete Subject** | `class Parcel` | Maintains internal state (`parcelId`, `status`) and observer registry (`List<Observer> observers`). Exposes `registerObserver()`, `removeObserver()`, `notifyObservers()`, and `setStatus()`. |
+| **Client / Driver** | `public class Main` | Instantiates `Parcel("P101", "Packed")`, registers `Rahul`, `Priya`, and `Amit`, changes status to `Shipped`, unsubscribes `Priya`, and updates status to `Out for Delivery`. |
 
 ---
 
-## 🚀 4. How to Run the Project
+## 🚀 3. How to Run the Project
 
-### Prerequisites
-- **Java Development Kit (JDK 17 or higher)** installed.
-- **Maven** installed (or use your IDE's bundled Maven).
+### Option A: 1-Click Launch (Web Dashboard + Java Integration Server)
 
-### Option A: Running from an IDE (IntelliJ IDEA / Eclipse / VS Code)
-1. Open IntelliJ IDEA or VS Code.
-2. Select **Open Project** and navigate to `smart-parcel-tracker` (where `pom.xml` is located).
-3. Wait for Maven to sync dependencies.
-4. **To test pure Java Observer Pattern (Console Demo)**:
-   - Navigate to [`src/main/java/com/parceltracker/Main.java`](src/main/java/com/parceltracker/Main.java).
-   - Right-click and choose **Run 'Main.main()'**.
-5. **To run the full Web Application**:
-   - Navigate to [`src/main/java/com/parceltracker/SmartParcelTrackerApplication.java`](src/main/java/com/parceltracker/SmartParcelTrackerApplication.java).
-   - Right-click and select **Run 'SmartParcelTrackerApplication'**.
-6. Open your web browser and navigate to:
+1. Open PowerShell or Command Prompt in this folder (`DP`):
+   ```bash
+   node server.js
    ```
-   http://localhost:8080
+   *(Or simply double-click **`run.bat`**)*
+
+2. Open your web browser at:
+   ```
+   http://localhost:3000
    ```
 
-### Option B: Running via Maven Command Line
-In PowerShell / Command Prompt inside the `smart-parcel-tracker` folder:
+3. Click **"Run Original Java Program"** to trigger live compilation (`javac Main.java`) and JVM execution (`java Main`) with real-time output and execution metrics!
+
+---
+
+### Option B: Pure Java Console Execution (No Web Server Needed)
+
+You can compile and run `Main.java` directly in any standard Java environment:
+
 ```bash
-# Run tests
-mvn test
+# Compile
+javac Main.java
 
-# Start the Spring Boot Web Server
-mvn spring-boot:run
+# Run
+java Main
 ```
-Once started, visit: `http://localhost:8080`
+
+*(Or simply double-click **`run_java_only.bat`**)*
+
+#### Expected Exact Console Output:
+```text
+--- Status updated to Shipped ---
+Hello Rahul! Your parcel P101 is now: Shipped
+Hello Priya! Your parcel P101 is now: Shipped
+Agent Amit: Parcel P101 status updated to: Shipped
+
+--- Priya unsubscribes ---
+
+--- Status updated to Out for Delivery ---
+Hello Rahul! Your parcel P101 is now: Out for Delivery
+Agent Amit: Parcel P101 status updated to: Out for Delivery
+```
 
 ---
 
-## 🧪 5. Testing the 10-Step Demonstration Scenario
+## ⚠️ 4. System Limitations & Academic Architecture Explanation
 
-1. **Open the Website**: Go to `http://localhost:8080`.
-2. **Page 1 (Track Parcel)**:
-   - Enter `P101` and click **Track**. Observe status is `Packed`.
-3. **Page 2 (Customer Dashboard)**:
-   - Pre-loaded observers: Rahul, Priya, and Agent Amit are already subscribed to `P101`.
-   - Select `Parcel P101` from the dropdown under **Notification History**.
-4. **Page 3 (Admin Dashboard)**:
-   - Select `P101`.
-   - Choose new status: **Shipped** and click **Save Status & Notify Observers**.
-5. **Verify Notification Flow**:
-   - Switch back to **Customer Dashboard**. You will see:
-     - `[Customer Notification] Hello Rahul! Your parcel P101 has been updated to: Shipped`
-     - `[Customer Notification] Hello Priya! Your parcel P101 has been updated to: Shipped`
-     - `[Agent Notification] Agent Amit: Action required! Parcel P101 status changed to: Shipped`
-6. **Test Unsubscribe**:
-   - In Customer Dashboard, enter Parcel ID `P101` and Observer ID `cust_priya_P101`, then click **Unsubscribe**.
-7. **Change Status Again in Admin**:
-   - Set status to **Out for Delivery** and save.
-8. **Verify Exclusion**:
-   - Rahul and Amit receive the new notification. Priya receives **no** further notifications!
+### Question: *Why can't the website interactively change parcel status inside Java without modifying the Java code?*
 
-> **Note**: Restarting the server resets all in-memory data back to the default initial sample state.
+1. **JVM Process Lifecycle**:
+   - `Main.java` is a standard, standalone console application (`public static void main(String[] args)`).
+   - When launched, the JVM executes the sequential statements in `main()`, prints the output to `System.out`, and terminates (Exit Code 0).
+   - It does not stay alive waiting for incoming network requests.
+
+2. **Strict Non-Modification Constraint**:
+   - To make the Java program dynamically listen for button clicks from a web browser, we would have to modify `Main.java` to include a socket listener, an HTTP server, or Spring Web controllers, and add public setters/getters.
+   - Because the project rules strictly forbid adding any methods, controllers, or changing existing statements, **modifying the Java code was deliberately rejected**.
+
+3. **How This Project Solves It Transparently**:
+   - **Authentic Execution**: The website includes an **External Launcher** that runs the real `Main.java` via the operating system process layer and captures authentic stdout.
+   - **Visual Educational Stepper**: The website provides a separate, clearly labeled interactive visual stepper (client-side simulation) to help visualize runtime observer interactions during viva presentations without modifying the immutable Java source code.
+
+---
+
+## 🎓 5. College Viva Defense Notes
+
+1. **What is Loose Coupling?**
+   - The Subject (`Parcel`) only knows about the abstract `Observer` interface. It does not know or care whether an observer is a `Customer`, a `DeliveryAgent`, or a future `SmsAlertService`.
+
+2. **What is the Open-Closed Principle (OCP)?**
+   - Open for extension, closed for modification. New types of observers can be added without altering the `Parcel` class.
+
+3. **Why did Priya stop receiving notifications?**
+   - In `Main.java`, `parcel.removeObserver(priya)` removed her instance from `List<Observer> observers`. When `setStatus("Out for Delivery")` was subsequently invoked, `notifyObservers()` only iterated through the remaining elements (`Rahul` and `Amit`).
