@@ -1,37 +1,195 @@
 # Smart Parcel Tracking and Notification System Using Observer Design Pattern in Java
 
-A college mini project demonstrating the **Observer Design Pattern** in pure, unedited Java with a modern **blue-and-white** web dashboard and an external launcher integration layer.
+A college mini project demonstrating the **Observer Design Pattern** in Java, featuring an unmodified core Java implementation, an interactive user-input console edition, and a modern real-time **blue-and-white** web tracking portal.
 
 ---
 
-## 📌 1. Project Overview & Code Integrity Guarantee
+## 📋 1. Problem Statement
 
-### Strict Requirement Compliance
-- **Zero Modifications to Java**: The student's original Java code in [`Main.java`](Main.java) is **100% UNCHANGED**.
-- **No Extra Methods**: No getters, setters, controllers, or helper methods were added.
-- **No Spring Boot / No Database**: Pure Java SE standard library (`java.util.ArrayList`, `java.util.List`).
-- **Real Integration Layer**: An external launcher (`server.js`) compiles and executes the unedited `Main.java` on the JVM and streams its verbatim standard output directly into the web dashboard.
-- **Academic Transparency**: Clearly distinguishes between **Actual Java-Backed JVM Execution** and the **Interactive Visual Stepper (Client-Side Simulation)**.
+### Background
+In contemporary e-commerce and logistics networks, a parcel travels through several sequential fulfillment stages—such as **Packed**, **Shipped**, **Out for Delivery**, and **Delivered**. Diverse stakeholders need instantaneous, tailored alerts whenever a parcel's status transitions:
+- **Customers** require reassuring alerts containing their parcel ID and delivery progress.
+- **Delivery Agents** require action-oriented dispatches to plan final-mile dropoffs.
+- Stakeholders must also have the freedom to **subscribe or unsubscribe** dynamically at any point during transit without disrupting the system.
+
+### The Problem of Tight Coupling
+In a naive software implementation, the `Parcel` class directly references concrete `Customer` and `DeliveryAgent` objects. This introduces critical architectural problems:
+1. **Tight Coupling**: Any change in the notification logic or customer structure breaks the `Parcel` class.
+2. **Violation of the Open-Closed Principle (OCP)**: Adding new observers (e.g., `WarehouseManager`, `SmsNotificationService`, or `AnalyticsTracker`) forces modifications to the core `Parcel` class.
+3. **Rigid Subscriptions**: Hardcoded dependencies prevent observers from dynamically subscribing or opting out at runtime.
+
+### Proposed Solution
+By implementing the **Observer Design Pattern (GoF Behavioral Pattern)**:
+- The **Subject** (`Parcel`) maintains a dynamic list of subscribers adhering to an abstract `Observer` interface.
+- Concrete observers (`Customer` and `DeliveryAgent`) register with the subject via `registerObserver()`.
+- When `setStatus()` detects a state change, `notifyObservers()` automatically iterates through the active registry and invokes `update()`.
+- Observers can dynamically opt out via `removeObserver()`, ensuring that un-subscribed parties receive zero subsequent notifications.
 
 ---
 
-## 📐 2. Observer Design Pattern Mapping
+## 📊 2. UML Diagrams
 
-| Pattern Participant | Java Component in `Main.java` | Role & Responsibility |
+### A. UML Class Diagram — `Main.java` (Original Unedited Core)
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Observer {
+        <<interface>>
+        +update(parcelId: String, status: String) void
+    }
+
+    class Customer {
+        -name: String
+        +Customer(name: String)
+        +update(parcelId: String, status: String) void
+    }
+
+    class DeliveryAgent {
+        -name: String
+        +DeliveryAgent(name: String)
+        +update(parcelId: String, status: String) void
+    }
+
+    class Parcel {
+        -parcelId: String
+        -status: String
+        -observers: List~Observer~
+        +Parcel(parcelId: String, status: String)
+        +registerObserver(o: Observer) void
+        +removeObserver(o: Observer) void
+        +notifyObservers() void
+        +setStatus(newStatus: String) void
+    }
+
+    class Main {
+        +main(args: String[]) void
+    }
+
+    Observer <|.. Customer : implements
+    Observer <|.. DeliveryAgent : implements
+    Parcel "1" o--> "*" Observer : maintains & notifies
+    Main ..> Parcel : instantiates & updates
+    Main ..> Customer : registers
+    Main ..> DeliveryAgent : registers
+```
+
+---
+
+### B. UML Class Diagram — `InteractiveMain.java` (User Input with Scanner)
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Observer {
+        <<interface>>
+        +update(parcelId: String, status: String) void
+        +getName() String
+    }
+
+    class Customer {
+        -name: String
+        +Customer(name: String)
+        +getName() String
+        +update(parcelId: String, status: String) void
+    }
+
+    class DeliveryAgent {
+        -name: String
+        +DeliveryAgent(name: String)
+        +getName() String
+        +update(parcelId: String, status: String) void
+    }
+
+    class Parcel {
+        -parcelId: String
+        -status: String
+        -observers: List~Observer~
+        +Parcel(parcelId: String, status: String)
+        +registerObserver(o: Observer) void
+        +removeObserver(o: Observer) void
+        +notifyObservers() void
+        +setStatus(newStatus: String) void
+        +getStatus() String
+        +getParcelId() String
+        +getObservers() List~Observer~
+    }
+
+    class InteractiveMain {
+        +main(args: String[]) void
+    }
+
+    class Scanner {
+        <<Java Util>>
+        +nextLine() String
+    }
+
+    Observer <|.. Customer : implements
+    Observer <|.. DeliveryAgent : implements
+    Parcel "1" o--> "*" Observer : maintains & notifies
+    InteractiveMain ..> Parcel : manages lifecycle
+    InteractiveMain ..> Scanner : accepts keyboard input
+    InteractiveMain ..> Customer : dynamically creates
+    InteractiveMain ..> DeliveryAgent : dynamically creates
+```
+
+---
+
+### C. UML Sequence Diagram — Dynamic Notification & Unsubscribe Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Dispatcher / Main
+    participant P as Parcel (Subject)
+    participant R as Rahul (Customer)
+    participant Pr as Priya (Customer)
+    participant A as Amit (DeliveryAgent)
+
+    Admin->>P: registerObserver(Rahul)
+    Admin->>P: registerObserver(Priya)
+    Admin->>P: registerObserver(Amit)
+
+    Note over Admin,P: 1. Status Changes to "Shipped"
+    Admin->>P: setStatus("Shipped")
+    P->>P: notifyObservers()
+    P->>R: update("P101", "Shipped")
+    P->>Pr: update("P101", "Shipped")
+    P->>A: update("P101", "Shipped")
+
+    Note over Admin,Pr: 2. Dynamic Unsubscription
+    Admin->>P: removeObserver(Priya)
+    Note right of P: Priya is removed from List<Observer>
+
+    Note over Admin,P: 3. Status Changes to "Out for Delivery"
+    Admin->>P: setStatus("Out for Delivery")
+    P->>P: notifyObservers()
+    P->>R: update("P101", "Out for Delivery")
+    P->>A: update("P101", "Out for Delivery")
+    Note over Pr: Priya receives NO notification (Unsubscribed)
+```
+
+---
+
+## 📐 3. Observer Design Pattern Mapping
+
+| Pattern Participant | Java Component | Role & Responsibility |
 | :--- | :--- | :--- |
 | **Observer Interface** | `interface Observer` | Declares the notification contract: `void update(String parcelId, String status)`. |
 | **Concrete Observer 1** | `class Customer` | Implements `update()` to print customer-tailored status alerts: `"Hello <name>! Your parcel <id> is now: <status>"`. |
 | **Concrete Observer 2** | `class DeliveryAgent` | Implements `update()` to print courier-tailored status alerts: `"Agent <name>: Parcel <id> status updated to: <status>"`. |
 | **Concrete Subject** | `class Parcel` | Maintains internal state (`parcelId`, `status`) and observer registry (`List<Observer> observers`). Exposes `registerObserver()`, `removeObserver()`, `notifyObservers()`, and `setStatus()`. |
-| **Client / Driver** | `public class Main` | Instantiates `Parcel("P101", "Packed")`, registers `Rahul`, `Priya`, and `Amit`, changes status to `Shipped`, unsubscribes `Priya`, and updates status to `Out for Delivery`. |
+| **Client / Driver** | `public class Main` / `InteractiveMain` | Drives the state transitions, registers/removes observers, and triggers automated notifications. |
 
 ---
 
-## 🚀 3. How to Run the Project
+## 🚀 4. How to Run the Project
 
-### Option A: 1-Click Launch (Web Dashboard + Java Integration Server)
+### Option A: Web Application (Real-Time Tracking & Dispatch Dashboard)
 
-1. Open PowerShell or Command Prompt in this folder (`DP`):
+1. Open PowerShell or Command Prompt in this folder:
    ```bash
    node server.js
    ```
@@ -42,25 +200,38 @@ A college mini project demonstrating the **Observer Design Pattern** in pure, un
    http://localhost:3000
    ```
 
-3. Click **"Run Original Java Program"** to trigger live compilation (`javac Main.java`) and JVM execution (`java Main`) with real-time output and execution metrics!
+3. **Features on the Web**:
+   - Multi-consignment support (`#P101 - Rahul`, `#P102 - Priya`, `#P103 - Sneha`).
+   - One-click dispatch buttons (`Packed`, `Shipped`, `Out for Delivery`, `Delivered`).
+   - Live notification feed with customer vs. delivery agent message badges.
+   - Dynamic subscriber management (add custom observers or click "Unsubscribe").
+   - `+ New Parcel` registration modal.
 
 ---
 
-### Option B: Pure Java Console Execution (No Web Server Needed)
+### Option B: Interactive Console Program with User Input (`InteractiveMain.java`)
 
-You can compile and run `Main.java` directly in any standard Java environment:
+Allows the student or professor to dynamically type custom parcel IDs, add observers, change statuses, and unsubscribe observers directly from the keyboard:
 
 ```bash
-# Compile
-javac Main.java
+javac InteractiveMain.java
+java InteractiveMain
+```
+*(Or simply double-click **`interactive_run.bat`**)*
 
-# Run
+---
+
+### Option C: Original Pure Java Console (`Main.java`)
+
+Runs the original unedited Java Observer demonstration:
+
+```bash
+javac Main.java
 java Main
 ```
+*(Or double-click **`run_java_only.bat`**)*
 
-*(Or simply double-click **`run_java_only.bat`**)*
-
-#### Expected Exact Console Output:
+#### Exact Console Output Produced:
 ```text
 --- Status updated to Shipped ---
 Hello Rahul! Your parcel P101 is now: Shipped
@@ -76,32 +247,13 @@ Agent Amit: Parcel P101 status updated to: Out for Delivery
 
 ---
 
-## ⚠️ 4. System Limitations & Academic Architecture Explanation
-
-### Question: *Why can't the website interactively change parcel status inside Java without modifying the Java code?*
-
-1. **JVM Process Lifecycle**:
-   - `Main.java` is a standard, standalone console application (`public static void main(String[] args)`).
-   - When launched, the JVM executes the sequential statements in `main()`, prints the output to `System.out`, and terminates (Exit Code 0).
-   - It does not stay alive waiting for incoming network requests.
-
-2. **Strict Non-Modification Constraint**:
-   - To make the Java program dynamically listen for button clicks from a web browser, we would have to modify `Main.java` to include a socket listener, an HTTP server, or Spring Web controllers, and add public setters/getters.
-   - Because the project rules strictly forbid adding any methods, controllers, or changing existing statements, **modifying the Java code was deliberately rejected**.
-
-3. **How This Project Solves It Transparently**:
-   - **Authentic Execution**: The website includes an **External Launcher** that runs the real `Main.java` via the operating system process layer and captures authentic stdout.
-   - **Visual Educational Stepper**: The website provides a separate, clearly labeled interactive visual stepper (client-side simulation) to help visualize runtime observer interactions during viva presentations without modifying the immutable Java source code.
-
----
-
 ## 🎓 5. College Viva Defense Notes
 
 1. **What is Loose Coupling?**
-   - The Subject (`Parcel`) only knows about the abstract `Observer` interface. It does not know or care whether an observer is a `Customer`, a `DeliveryAgent`, or a future `SmsAlertService`.
+   - The Subject (`Parcel`) only interacts through the abstract `Observer` interface. It has zero dependencies on concrete observer implementations.
 
-2. **What is the Open-Closed Principle (OCP)?**
-   - Open for extension, closed for modification. New types of observers can be added without altering the `Parcel` class.
+2. **How does this satisfy the Open-Closed Principle (OCP)?**
+   - New notification targets (e.g. `EmailService`, `WarehouseManager`, `SmsGateway`) can be created simply by implementing `Observer`, without changing even one line of the `Parcel` class.
 
 3. **Why did Priya stop receiving notifications?**
-   - In `Main.java`, `parcel.removeObserver(priya)` removed her instance from `List<Observer> observers`. When `setStatus("Out for Delivery")` was subsequently invoked, `notifyObservers()` only iterated through the remaining elements (`Rahul` and `Amit`).
+   - In `Main.java`, `parcel.removeObserver(priya)` removed her reference from the `List<Observer>`. When `setStatus("Out for Delivery")` called `notifyObservers()`, only active subscribers (`Rahul` and `Amit`) were updated.
