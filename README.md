@@ -27,9 +27,9 @@ By implementing the **Observer Design Pattern (GoF Behavioral Pattern)**:
 
 ---
 
-## 📊 2. UML Diagrams
+## 📊 2. UML Class Diagram (IS-A & HAS-A Relationships)
 
-### A. UML Class Diagram — `Main.java` (Original Unedited Core)
+The following UML diagram represents the core Java implementation in [`Main.java`](Main.java), explicitly illustrating the **IS-A (Realization/Inheritance)** and **HAS-A (Aggregation/Composition)** relationships:
 
 ```mermaid
 classDiagram
@@ -67,121 +67,34 @@ classDiagram
         +main(args: String[]) void
     }
 
-    Observer <|.. Customer : implements
-    Observer <|.. DeliveryAgent : implements
-    Parcel "1" o--> "*" Observer : maintains & notifies
+    Observer <|.. Customer : IS-A (implements)
+    Observer <|.. DeliveryAgent : IS-A (implements)
+    Parcel "1" o--> "*" Observer : HAS-A (List<Observer>)
     Main ..> Parcel : instantiates & updates
     Main ..> Customer : registers
     Main ..> DeliveryAgent : registers
 ```
 
----
+### 🔗 Relationship Breakdown for College Evaluation
 
-### B. UML Class Diagram — `InteractiveMain.java` (User Input with Scanner)
-
-```mermaid
-classDiagram
-    direction TB
-
-    class Observer {
-        <<interface>>
-        +update(parcelId: String, status: String) void
-        +getName() String
-    }
-
-    class Customer {
-        -name: String
-        +Customer(name: String)
-        +getName() String
-        +update(parcelId: String, status: String) void
-    }
-
-    class DeliveryAgent {
-        -name: String
-        +DeliveryAgent(name: String)
-        +getName() String
-        +update(parcelId: String, status: String) void
-    }
-
-    class Parcel {
-        -parcelId: String
-        -status: String
-        -observers: List~Observer~
-        +Parcel(parcelId: String, status: String)
-        +registerObserver(o: Observer) void
-        +removeObserver(o: Observer) void
-        +notifyObservers() void
-        +setStatus(newStatus: String) void
-        +getStatus() String
-        +getParcelId() String
-        +getObservers() List~Observer~
-    }
-
-    class InteractiveMain {
-        +main(args: String[]) void
-    }
-
-    class Scanner {
-        <<Java Util>>
-        +nextLine() String
-    }
-
-    Observer <|.. Customer : implements
-    Observer <|.. DeliveryAgent : implements
-    Parcel "1" o--> "*" Observer : maintains & notifies
-    InteractiveMain ..> Parcel : manages lifecycle
-    InteractiveMain ..> Scanner : accepts keyboard input
-    InteractiveMain ..> Customer : dynamically creates
-    InteractiveMain ..> DeliveryAgent : dynamically creates
-```
-
----
-
-### C. UML Sequence Diagram — Dynamic Notification & Unsubscribe Flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Admin as Dispatcher / Main
-    participant P as Parcel (Subject)
-    participant R as Rahul (Customer)
-    participant Pr as Priya (Customer)
-    participant A as Amit (DeliveryAgent)
-
-    Admin->>P: registerObserver(Rahul)
-    Admin->>P: registerObserver(Priya)
-    Admin->>P: registerObserver(Amit)
-
-    Note over Admin,P: 1. Status Changes to "Shipped"
-    Admin->>P: setStatus("Shipped")
-    P->>P: notifyObservers()
-    P->>R: update("P101", "Shipped")
-    P->>Pr: update("P101", "Shipped")
-    P->>A: update("P101", "Shipped")
-
-    Note over Admin,Pr: 2. Dynamic Unsubscription
-    Admin->>P: removeObserver(Priya)
-    Note right of P: Priya is removed from List<Observer>
-
-    Note over Admin,P: 3. Status Changes to "Out for Delivery"
-    Admin->>P: setStatus("Out for Delivery")
-    P->>P: notifyObservers()
-    P->>R: update("P101", "Out for Delivery")
-    P->>A: update("P101", "Out for Delivery")
-    Note over Pr: Priya receives NO notification (Unsubscribed)
-```
+| Relationship Type | Involved Classes / Interfaces | Code Implementation in `Main.java` | Meaning & Academic Significance |
+| :--- | :--- | :--- | :--- |
+| **IS-A** *(Realization)* | `Customer` **IS-A** `Observer` | `class Customer implements Observer` | **Polymorphism**: `Customer` conforms to the `Observer` interface and must implement `update()`. |
+| **IS-A** *(Realization)* | `DeliveryAgent` **IS-A** `Observer` | `class DeliveryAgent implements Observer` | **Polymorphism**: `DeliveryAgent` conforms to the `Observer` interface and must implement `update()`. |
+| **HAS-A** *(Aggregation)* | `Parcel` **HAS-A** `Observer` | `private List<Observer> observers = new ArrayList<>();` | **Loose Coupling**: The `Parcel` subject holds a collection of `Observer` references instead of tightly coupling to specific concrete classes. |
+| **Dependency** *(Usage)* | `Main` **USES** `Parcel`, `Customer`, `DeliveryAgent` | `public class Main` driver | The client instantiates the subject and observers, registers them, and triggers state updates. |
 
 ---
 
 ## 📐 3. Observer Design Pattern Mapping
 
-| Pattern Participant | Java Component | Role & Responsibility |
+| Pattern Participant | Java Component in `Main.java` | Role & Responsibility |
 | :--- | :--- | :--- |
 | **Observer Interface** | `interface Observer` | Declares the notification contract: `void update(String parcelId, String status)`. |
 | **Concrete Observer 1** | `class Customer` | Implements `update()` to print customer-tailored status alerts: `"Hello <name>! Your parcel <id> is now: <status>"`. |
 | **Concrete Observer 2** | `class DeliveryAgent` | Implements `update()` to print courier-tailored status alerts: `"Agent <name>: Parcel <id> status updated to: <status>"`. |
 | **Concrete Subject** | `class Parcel` | Maintains internal state (`parcelId`, `status`) and observer registry (`List<Observer> observers`). Exposes `registerObserver()`, `removeObserver()`, `notifyObservers()`, and `setStatus()`. |
-| **Client / Driver** | `public class Main` / `InteractiveMain` | Drives the state transitions, registers/removes observers, and triggers automated notifications. |
+| **Client / Driver** | `public class Main` | Instantiates `Parcel("P101", "Packed")`, registers `Rahul`, `Priya`, and `Amit`, changes status to `Shipped`, unsubscribes `Priya`, and updates status to `Out for Delivery`. |
 
 ---
 
